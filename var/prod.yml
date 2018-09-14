@@ -1,0 +1,5 @@
+AppName: ServerlessAppScaffold
+Domain: www.scaffold.com.br
+DynamoCapacity:
+  ReadCapacityUnits: 1
+  WriteCapacityUnits: 1
