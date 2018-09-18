@@ -1,0 +1,6 @@
+<mat-nav-list>
+    <mat-list-item *ngFor="let link of navBarItems" (click)="onToggleSidenav()"> 
+        <a matLine routerLink={{link.link}}>{{ link.caption }}</a>
+        <mat-icon>{{ link.icon }}</mat-icon>
+    </mat-list-item>
+  </mat-nav-list>
