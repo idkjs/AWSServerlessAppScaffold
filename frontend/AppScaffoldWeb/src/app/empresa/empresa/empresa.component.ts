@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+// import { Observable } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-empresa',
@@ -7,9 +9,12 @@ import { Component, OnInit } from '@angular/core';
 })
 export class EmpresaComponent implements OnInit {
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
   ngOnInit() {
+
+    const response = this.http.get<String>('http://localhost:8080/products/123').toPromise().then(console.log).catch(console.log);
+
   }
 
 }
