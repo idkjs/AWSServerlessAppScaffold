@@ -1,0 +1,138 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Master Stack for Application",
+  "Parameters": {
+    "AppName": {
+      "Type": "String",
+      "Description": "The Name of the Application",
+      "AllowedPattern": "(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)",
+      "ConstraintDescription": "must be a url compatible."
+    },
+    "BucketName": {
+      "Type": "String",
+      "Description": "The Name of the Bucket were templates and resources are located!",
+      "AllowedPattern": "(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)",
+      "ConstraintDescription": "must be a url compatible."
+    }
+  },
+  "Resources": {
+    "AppApi": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://",
+              "s3-",
+              {
+                "Ref": "AWS::Region"
+              },
+              ".amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "apidefinition.json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          },
+          "FunctionBucket": {
+            "Ref": "BucketName"
+          },
+          "FunctionKey": "apidefinition.json"
+        }
+      }
+    },
+    "MicroserviceEmpresa": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://",
+              "s3-",
+              {
+                "Ref": "AWS::Region"
+              },
+              ".amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "empresa",
+              ".json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          },
+          "FunctionBucket": {
+            "Ref": "BucketName"
+          },
+          "FunctionKey": "empresa-3fbdfe655ea74f9510629174e6b864ca.zip"
+        }
+      }
+    },
+    "MicroservicePessoa": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://",
+              "s3-",
+              {
+                "Ref": "AWS::Region"
+              },
+              ".amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "pessoa",
+              ".json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          },
+          "FunctionBucket": {
+            "Ref": "BucketName"
+          },
+          "FunctionKey": "pessoa-a2e6c7df63abd1347f16b08f7f4f48a2.zip"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "AppApi": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AppApi",
+          "Outputs.AppRestAPIReference"
+        ]
+      },
+      "Description": "Application RestAPI definition"
+    },
+    "AppApiRootResource": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AppApi",
+          "Outputs.AppRestAPIRootResource"
+        ]
+      },
+      "Description": "Application RestAPI definition"
+    }
+  }
+}

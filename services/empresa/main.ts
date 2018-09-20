@@ -1,5 +1,5 @@
 import { APIGatewayEvent, Callback, Context, Handler, APIGatewayProxyResult } from 'aws-lambda';
-import { NoSQL } from '../commonlibs/nosql'
+import { NoSQL } from '../common/nosql'
 
 function logResponse(context: Context, response: APIGatewayProxyResult): void {
 

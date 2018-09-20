@@ -1,5 +1,5 @@
 {
-    "services": ["empresa"],
-    "outfolder": "/build",
+    "services": ["empresa", "pessoa"],
+    "outfolder": "./build",
     "tempfolder": "./temp"
 }

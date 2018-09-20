@@ -1,0 +1,7 @@
+{
+    "services": ["empresa", "pessoa"],
+    "outfolder": "./build",
+    "awsprofile": "mobile",
+    "bucketregion": "us-east-1",
+    "bucketname": "app-scaffold-templates"
+}

@@ -1,0 +1,25 @@
+{
+    "name": "backend",
+    "version": "0.1.0",
+    "main": "bin/index.js",
+    "types": "bin/index.d.ts",
+    "bin": {
+        "backend": "bin/backend.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "watch": "tsc -w"
+    },
+    "devDependencies": {
+        "@types/node": "^8.9.4",
+        "typescript": "^2.8.3"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.318.0",
+        "gulp": "^3.9.1",
+        "gulp-hash-filename": "^1.2.0",
+        "gulp-replace": "^1.0.0",
+        "gulp-typescript": "^5.0.0-alpha.3",
+        "gulp-zip": "^4.2.0"
+    }
+}
