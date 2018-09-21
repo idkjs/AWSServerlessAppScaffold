@@ -24,27 +24,18 @@
           "Fn::Join": [
             "",
             [
-              "https://",
-              "s3-",
-              {
-                "Ref": "AWS::Region"
-              },
-              ".amazonaws.com/",
+              "https://s3.amazonaws.com/",
               {
                 "Ref": "BucketName"
               },
-              "apidefinition.json"
+              "/apidefinition.json"
             ]
           ]
         },
         "Parameters": {
           "AppName": {
             "Ref": "AppName"
-          },
-          "FunctionBucket": {
-            "Ref": "BucketName"
-          },
-          "FunctionKey": "apidefinition.json"
+          }
         }
       }
     },
@@ -56,15 +47,11 @@
           "Fn::Join": [
             "",
             [
-              "https://",
-              "s3-",
-              {
-                "Ref": "AWS::Region"
-              },
-              ".amazonaws.com/",
+              "https://s3.amazonaws.com/",
               {
                 "Ref": "BucketName"
               },
+              "/",
               "empresa",
               ".json"
             ]
@@ -77,7 +64,20 @@
           "FunctionBucket": {
             "Ref": "BucketName"
           },
-          "FunctionKey": "empresa-3fbdfe655ea74f9510629174e6b864ca.zip"
+          "FunctionKey": "empresa-0061e1e173f37cdf972078d2d0cd4d89.zip",
+          "AppBaseUrl": "https://www.exemplo.com",
+          "AppRestAPI": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIReference"
+            ]
+          },
+          "AppRestAPIRootResource": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIRootResource"
+            ]
+          }
         }
       }
     },
@@ -89,15 +89,11 @@
           "Fn::Join": [
             "",
             [
-              "https://",
-              "s3-",
-              {
-                "Ref": "AWS::Region"
-              },
-              ".amazonaws.com/",
+              "https://s3.amazonaws.com/",
               {
                 "Ref": "BucketName"
               },
+              "/",
               "pessoa",
               ".json"
             ]
@@ -110,7 +106,20 @@
           "FunctionBucket": {
             "Ref": "BucketName"
           },
-          "FunctionKey": "pessoa-a2e6c7df63abd1347f16b08f7f4f48a2.zip"
+          "FunctionKey": "pessoa-7a78507a633b9ea9cac9a6ad4cb60ed5.zip",
+          "AppBaseUrl": "https://www.exemplo.com",
+          "AppRestAPI": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIReference"
+            ]
+          },
+          "AppRestAPIRootResource": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIRootResource"
+            ]
+          }
         }
       }
     }

@@ -15,11 +15,13 @@
         "typescript": "^2.8.3"
     },
     "dependencies": {
+        "@types/uuid": "^3.4.4",
         "aws-sdk": "^2.318.0",
         "gulp": "^3.9.1",
         "gulp-hash-filename": "^1.2.0",
         "gulp-replace": "^1.0.0",
         "gulp-typescript": "^5.0.0-alpha.3",
-        "gulp-zip": "^4.2.0"
+        "gulp-zip": "^4.2.0",
+        "uuid": "^3.3.2"
     }
 }

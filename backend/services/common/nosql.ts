@@ -1,4 +1,5 @@
 import { DynamoDB } from 'aws-sdk';
+import { v4 } from 'uuid';
 
 interface AWSErrorTyped {
     code: string            // a unique short code representing the error that was emitted.
@@ -10,10 +11,10 @@ interface AWSErrorTyped {
     region?: string          // set when a networking error occurs to easily identify the region of the request.
 }
 
-interface NoSQLResult { statusCode: number, body: any }
-interface NoSQLError { statusCode: number, message: string }
+export interface NoSQLResult { statusCode: number, body: string }
+export interface NoSQLError { statusCode: number, message: string }
 
-// @ts-ignore
+export interface NoSQLCallback {(NoSQLError, NoSQLResult): void };
 export interface GetItemParams { (NoSQLError, NoSQLResult): void }
 
 export class NoSQL {
@@ -25,7 +26,7 @@ export class NoSQL {
     getItem(tableName: string, itemId: string, callback: GetItemParams): void {
         
         console.log(`Get Item from ${tableName} using endpoint ${this.endpoint}`);
-        const params: DynamoDB.DocumentClient.GetItemInput = {TableName: tableName, Key: {"id": itemId}};
+        const params: DynamoDB.DocumentClient.GetItemInput = {TableName: tableName, Key: {"itemId": itemId}};
         this.documentClient.get(params).promise().then(value => {
 
             const item = value.Item;
@@ -50,6 +51,29 @@ export class NoSQL {
 
         })
         
+    }
+
+    createItem(tableName: string, item: Object, callback: NoSQLCallback): void {
+
+        console.log(`Post Item into ${tableName} using endpoint ${this.endpoint}`);
+
+        const itemId = v4();
+        const body = { itemId: itemId, ...item};
+        const params: DynamoDB.DocumentClient.PutItemInput  = {TableName: tableName, Item:body};
+        this.documentClient.put(params).promise().then(value => {
+
+            const attributes = value.Attributes || body;
+            const response: NoSQLResult = {statusCode: 201, body: JSON.stringify(attributes)}
+            callback(null, response);
+
+        }).catch(reason => {
+            
+            const awserror: AWSErrorTyped = reason;
+            const err:NoSQLError = {statusCode: 500, message: awserror.message }
+            callback(err, null);
+
+        })
+
     }
 
 }

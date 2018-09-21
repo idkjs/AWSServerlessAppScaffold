@@ -1,5 +1,9 @@
 import { APIGatewayEvent, Callback, Context, Handler, APIGatewayProxyResult } from 'aws-lambda';
-import { NoSQL } from '../common/nosql'
+import { NoSQL, NoSQLResult, NoSQLError } from '../common/nosql'
+import { ObjectUtils } from '../common/objectUtils';
+// import * as url from 'Url';
+
+const itemKeyname = 'pessoaId';
 
 function logResponse(context: Context, response: APIGatewayProxyResult): void {
 
@@ -28,10 +32,67 @@ export const handler: Handler = (event: APIGatewayEvent, context: Context, cb: C
 
         switch (method) {
 
+            case 'POST': {
+
+                const tableName = environment.toString();
+                if (!event.body) {
+
+                    const resultCode = 400;
+                    const resultBody = { statusCode: resultCode, message: 'Bad Request: Invalid body {empty}!' }
+                    const response: APIGatewayProxyResult = { statusCode: resultCode, body: JSON.stringify(resultBody) }
+                    logResponse(context, response);
+                    cb(null, response);
+                    return;
+
+                }
+
+                const body = JSON.parse(event.body);
+                const nosql = new NoSQL();
+                nosql.createItem(tableName, body, function(err: NoSQLError, data: NoSQLResult) {
+
+                    if (!err) {
+
+                        var returned:APIGatewayProxyResult = {statusCode: 200, body: ''};
+                        if (data.statusCode === 201) {
+
+                            let utils = new ObjectUtils();
+                            var returnedBody = JSON.parse(data.body);
+
+                            let itemId = returnedBody['itemId'];
+                            returnedBody = utils.renameProperty(returnedBody, 'itemId', itemKeyname);
+
+                            const baseUrl = process.env['BASE_URL'];
+                            let url = baseUrl + event.path + "/" + itemId;
+
+                            returned.statusCode = 201;
+                            returned.body = JSON.stringify(returnedBody);
+                            returned.headers = { Location: url }
+
+                        } else {returned = {...data}}
+
+                        logResponse(context, returned);
+                        cb(null, returned);
+                        
+                    } else {
+                        
+                        const errMsg = { statusCode: 500, body: JSON.stringify(err) }
+                        logResponse(context, errMsg);
+                        const response: APIGatewayProxyResult = { statusCode: 500, body: JSON.stringify( {statusCode: 500, message: 'Internal Server Error!'}) }
+                        logResponse(context, response);
+                        cb(null, response);
+
+                    }
+
+                })
+
+                break;
+
+            }
+
             case 'GET': {
 
                 const tableName = environment.toString();
-                if (!event.pathParameters || !event.pathParameters.empresaId) {
+                if (!event.pathParameters || !event.pathParameters[itemKeyname]) {
 
                     const resultCode = 400;
                     const resultBody = { statusCode: resultCode, message: 'Bad Request: Invalid resourceId {empty}!' }
@@ -42,14 +103,18 @@ export const handler: Handler = (event: APIGatewayEvent, context: Context, cb: C
 
                 }
 
-                const itemId = event.pathParameters.empresaId;
+                const itemId = event.pathParameters[itemKeyname];
                 const nosql = new NoSQL();
                 nosql.getItem(tableName, itemId, function(err, data) {
         
                     if (!err) {
 
+                        let utils = new ObjectUtils();
+                        var returnedBody = JSON.parse(data.body);
+                        returnedBody = utils.renameProperty(returnedBody, 'itemId', itemKeyname);
+                        const response = { statusCode: 200, body: JSON.stringify(returnedBody) };
                         logResponse(context, data);
-                        cb(null, data);
+                        cb(null, response);
                         
                     } else {
                         
