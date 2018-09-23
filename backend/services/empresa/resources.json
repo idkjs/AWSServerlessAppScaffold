@@ -47,8 +47,8 @@
           "Fn::Join": ["-", [{ "Ref": "AppName" }, "Empresa"]]
         },
         "ProvisionedThroughput": {
-          "ReadCapacityUnits": 5,
-          "WriteCapacityUnits": 5
+          "ReadCapacityUnits": 1,
+          "WriteCapacityUnits": 1
         },
         "KeySchema": [{
           "AttributeName": "itemId",

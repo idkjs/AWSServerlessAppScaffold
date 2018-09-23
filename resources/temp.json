@@ -1,0 +1,8 @@
+{
+    "Fn::Join": [ "", [ "arn:", { "Ref": "Partition" }, ":s3:::elasticbeanstalk-*-", { "Ref": "AWS::AccountId" } ] ]
+},
+{
+    "Fn::Join": [ "", [ { "Ref": "AppName" }, "-userpool" ] ]
+}
+
+"${AppName}-user-pool"

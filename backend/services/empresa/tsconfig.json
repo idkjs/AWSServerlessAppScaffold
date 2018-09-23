@@ -1,5 +1,5 @@
 {
-  "files": [ "main.ts", "../common/nosql.ts", "../common/objectUtils.ts" ],
+  "files": [ "main.ts", "../common/nosql.ts", "../common/nosqlCrud.ts", "../common/objectUtils.ts", "../common/contextUtils.ts" ],
   "compilerOptions": {
     "target": "es6",
     "module": "commonjs",

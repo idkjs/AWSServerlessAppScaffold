@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "Root Resources for Application (RestAPI, UserPool)",
+  "Description": "Root API for Application",
 
   "Parameters": {
 

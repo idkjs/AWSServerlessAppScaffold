@@ -16,6 +16,29 @@
     }
   },
   "Resources": {
+    "AuthPool": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://s3.amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "/authentication.json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          }
+        }
+      }
+    },
     "AppApi": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {
@@ -64,7 +87,7 @@
           "FunctionBucket": {
             "Ref": "BucketName"
           },
-          "FunctionKey": "empresa-0061e1e173f37cdf972078d2d0cd4d89.zip",
+          "FunctionKey": "empresa-7ab2b4e800ae3b010c99aab0aa912252.zip",
           "AppBaseUrl": "https://www.exemplo.com",
           "AppRestAPI": {
             "Fn::GetAtt": [
@@ -106,7 +129,7 @@
           "FunctionBucket": {
             "Ref": "BucketName"
           },
-          "FunctionKey": "pessoa-7a78507a633b9ea9cac9a6ad4cb60ed5.zip",
+          "FunctionKey": "pessoa-81fd79b6223908e888897f3e5240548e.zip",
           "AppBaseUrl": "https://www.exemplo.com",
           "AppRestAPI": {
             "Fn::GetAtt": [
