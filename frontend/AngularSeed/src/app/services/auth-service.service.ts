@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { AppError } from '../shared/sharedTypes';
@@ -20,6 +20,7 @@ export interface AuthProvider {
   accessToken: () => Observable<AuthToken>;
   signUp: (userData: UserData, password: string) => Observable<AppAuthResult>;
   signIn: (username: string, password: string) => Observable<AppAuthResult>;
+  signOut: () => void;
   confirmMFA: (verificationCode: string) => Observable<AppAuthResult>;
 }
 
@@ -44,13 +45,36 @@ export class AppAuthResults {
 export class AppAuthErrors {
   static AppAuthUserNotSigned: AppError = {statusCode: 403, message: 'User not Signed!' };
   static AppAuthInvalidUsername: AppError = {statusCode: 404, message: 'Invalid Username!' };
-  static AppAuthInvalidPassword: AppError = {statusCode: 405, message: 'Invalid Password!' };
-  static AppAuthInvalidAtrtibutes: AppError = {statusCode: 406, message: 'Invalid Attributes!' };
+  static AppAuthInvalidUserOrPassword: AppError = {statusCode: 405, message: 'Invalid Username or Password!' };
+  static AppAuthInvalidAttributes: AppError = {statusCode: 406, message: 'Invalid Attributes!' };
   static AppAuthPassRulesException: AppError = {statusCode: 407, message: 'Password Rules Exception!' };
+  static AppAuthUserNotFound: AppError = {statusCode: 408, message: 'User Not Found!' };
+  static AppAuthNotImplemented: AppError = {statusCode: 600, message: 'Mehotd Not Implemeted!' };
+  static AppAuthProviderNotAvailable: AppError = {statusCode: 601, message: 'Auth provider is not available!' };
 }
 
 @Injectable({ providedIn: 'root' })
-export class AuthServiceService {
+export class AuthService {
 
-  constructor() { }
+  constructor(@Inject('AUTH_PROVIDER') public provider?: AuthProvider) { }
+
+  user(): Observable<UserData> { return this.provider ? this.provider.user() : this.providerNotAvailable(); }
+  idToken(): Observable<AuthToken> { return this.provider ? this.provider.idToken() : this.providerNotAvailable(); }
+  accessToken(): Observable<AuthToken> { return this.provider ? this.provider.accessToken() : this.providerNotAvailable(); }
+
+  signIn(username: string, password: string): Observable<AppAuthResult> {
+
+    return this.provider ? this.provider.signIn(username, password) : this.providerNotAvailable();
+  }
+
+  signUp(userData: UserData, password: string): Observable<AppAuthResult> {
+    return this.provider ? this.provider.signUp(userData, password) : this.providerNotAvailable();
+  }
+
+  signOut() { this.provider.signOut(); }
+
+  private providerNotAvailable<T>(): Observable<T> {
+    return Observable.create(observer => observer.error(AppAuthErrors.AppAuthProviderNotAvailable));
+  }
+
 }
