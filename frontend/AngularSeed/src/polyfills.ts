@@ -78,3 +78,8 @@ import 'zone.js/dist/zone';  // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+
+/***************************************************************************************************
+ * AWS SDK Bug: https://stackoverflow.com/questions/50264344/aws-sdk-crash-after-updating-from-angular5-to-angular6
+ */
+(window as any).global = window;
