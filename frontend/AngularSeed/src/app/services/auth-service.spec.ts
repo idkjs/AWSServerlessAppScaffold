@@ -1,6 +1,6 @@
 import { TestBed, inject } from '@angular/core/testing';
 
-import { AuthService, AppAuthResults, UserData, AppAuthErrors } from './auth-service.service';
+import { AuthService, AppAuthResults, UserData, AppAuthErrors } from './auth-service';
 import { MockAuth } from '../providers/mock-authenticador';
 
 describe('AuthService', () => {

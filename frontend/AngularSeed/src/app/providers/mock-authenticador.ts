@@ -1,6 +1,6 @@
 import { Observable } from 'rxjs';
 import { AppError } from '../shared/sharedTypes';
-import { AuthProvider, AuthToken, AppAuthErrors, AppAuthResult, AppAuthResults, UserData } from '../services/auth-service.service';
+import { AuthProvider, AuthToken, AppAuthErrors, AppAuthResult, AppAuthResults, UserData } from '../services/auth-service';
 
 interface PasswordPool {
     username: string;

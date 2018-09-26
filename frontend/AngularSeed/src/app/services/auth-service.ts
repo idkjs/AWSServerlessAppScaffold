@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 import { AppError } from '../shared/sharedTypes';
 
@@ -56,6 +56,8 @@ export class AppAuthErrors {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
 
+  authStatus: Subject<UserData> = new Subject();
+
   constructor(@Inject('AUTH_PROVIDER') public provider?: AuthProvider) { }
 
   user(): Observable<UserData> { return this.provider ? this.provider.user() : this.providerNotAvailable(); }
@@ -65,6 +67,7 @@ export class AuthService {
   signIn(username: string, password: string): Observable<AppAuthResult> {
 
     return this.provider ? this.provider.signIn(username, password) : this.providerNotAvailable();
+
   }
 
   signUp(userData: UserData, password: string): Observable<AppAuthResult> {
