@@ -1,0 +1,34 @@
+{
+    "$id": "https://example.com/person.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Person",
+    "type": "object",
+    "properties": {
+      "givenName": {
+        "type": "string",
+        "description": "The person's first name."
+      },
+      "familyName": {
+        "type": "string",
+        "description": "The person's last name."
+      },
+      "alternateName": {
+        "type": "string",
+        "description": "An alias choosed by the person."
+      },
+      "image": {
+        "type": "string",
+        "description": "An image of the person. This must be a URL for the ImageObject related to the person"
+      },
+      "gender": {
+        "type": "string",
+        "description": "Gender of the person. Based on a list of options",
+        "enum": ["male", "female", "other"]
+      },
+      "age": {
+        "description": "Age in years which must be equal to or greater than zero.",
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  }

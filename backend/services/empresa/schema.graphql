@@ -1,0 +1,19 @@
+type Empresa {
+	itemId: String!
+	nome: String!
+	alias: String
+	cnpj: String
+	enderecos: AWSJSON
+	contatos: AWSJSON
+	cnae: AWSJSON
+	natureza: AWSJSON
+}
+
+type Query {
+	#     # Get a single value of type 'Post' by primary key.
+	byId(itemId: String!): Empresa
+}
+
+schema {
+	query: Query
+}

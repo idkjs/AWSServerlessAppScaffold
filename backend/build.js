@@ -304,6 +304,22 @@ services.forEach(serviceName => {
     
     let resourceName = path.join('.', 'services', serviceName, 'resources.json')
     copyResource(resourceName, tempfolder, serviceName + '.json');
+
+    // let schemaname = path.join('.', 'services', serviceName, 'schema.graphql')
+    // if (fs.existsSync(schemaname)) {copyResource(schemaname, tempfolder, serviceName + '-schema.graphql')}
+
+    let servicepath = path.join('.', 'services', serviceName)
+
+    var files=fs.readdirSync(servicepath);
+    for(var i=0; i<files.length; i++){
+
+        var filename = path.join(servicepath,files[i]);
+        if (filename.indexOf('.velocity') > 0 || filename.indexOf('schema.graphql') > 0) {
+            copyResource(filename, tempfolder, serviceName + '-' + files[i])
+        }
+
+    };
+
     gulptasks.push(compileTask(serviceName, tempfolder))
 
 });

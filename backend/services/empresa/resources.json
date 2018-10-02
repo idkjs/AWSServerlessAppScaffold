@@ -228,6 +228,90 @@
         }
 
       }
+    },
+
+    "AppSyncExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { "Service": ["appsync.amazonaws.com"] },
+            "Action": ["sts:AssumeRole"]
+          }]
+        },
+        "Path": "/",
+        "Policies": [{
+          "PolicyName": "root",
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [{
+                "Effect": "Allow",
+                "Resource": { "Fn::GetAtt": ["ServiceTableName", "Arn"] },
+                "Action": [
+                  "dynamodb:GetItem", "dynamodb:Query", "dynamodb:Scan",
+                  "dynamodb:BatchGetItem", "dynamodb:BatchWriteItem",
+                  "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem" ]
+              },
+              {
+                "Effect": "Allow",
+                "Resource": "*",
+                "Action": ["logs:CreateLogGroup", "logs:PutLogEvents", "logs:CreateLogStream"]
+              }
+            ]
+          }
+        }]
+      }
+    },
+
+    "GraphQLEndpoint": {
+      "Type" : "AWS::AppSync::GraphQLApi",
+      "Properties" : {
+        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-Empresa-GraphQL"]] },
+        "AuthenticationType" : "AWS_IAM",
+        "LogConfig" : {
+          "CloudWatchLogsRoleArn" : { "Fn::GetAtt": ["AppSyncExecutionRole", "Arn"] },
+          "FieldLogLevel" : "NONE"
+        }
+      }
+    },
+
+    "GraphQLDataSource" : {
+      "Type" : "AWS::AppSync::DataSource",
+      "Properties" : {
+        "Type" : "AMAZON_DYNAMODB",
+        "Description" : "Microservice Main Repository",
+        "ServiceRoleArn" : { "Fn::GetAtt": ["AppSyncExecutionRole", "Arn"] },
+        "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
+        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "EmpresaMainRepo"]] },
+        "DynamoDBConfig" : {
+          "TableName" : { "Ref": "ServiceTableName" },
+          "AwsRegion" : { "Ref" : "AWS::Region" },
+          "UseCallerCredentials" : false
+        }
+      }
+    },
+
+    "GraphQLSchema": {
+      "Type" : "AWS::AppSync::GraphQLSchema",
+      "Properties" : {
+        "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
+        "DefinitionS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-schema.graphql"]] }
+      }
+    },
+
+    "GraphQLQueryResolver": {
+      "Type" : "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQLSchema",
+      "Properties" : {
+        "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
+        "TypeName" : "Query",
+        "FieldName" : "byId",
+        "DataSourceName" : { "Fn::GetAtt": ["GraphQLDataSource", "Name"] },
+        "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryById.requestmap.velocity"]] },
+        "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryById.responsemap.velocity"]] }
+      }
     }
 
   },
