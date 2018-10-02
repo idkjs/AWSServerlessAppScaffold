@@ -1,7 +1,7 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
 
-  "Description": "Pessoa MicroService Cloud Formation Template",
+  "Description": "Empresa MicroService Cloud Formation Template",
 
   "Parameters": {
     
@@ -35,7 +35,7 @@
       "Type": "String",
       "Description": "Define the base url for the application"
     }
-
+    
   },
 
   "Resources": {
@@ -44,7 +44,7 @@
       "Type": "AWS::DynamoDB::Table",
       "Properties": {
         "TableName": {
-          "Fn::Join": ["-", [{ "Ref": "AppName" }, "Pessoa"]]
+          "Fn::Join": ["-", [{ "Ref": "AppName" }, "Empresa"]]
         },
         "ProvisionedThroughput": {
           "ReadCapacityUnits": 1,
@@ -68,8 +68,8 @@
           "S3Bucket": { "Ref": "FunctionBucket" },
           "S3Key": { "Ref": "FunctionKey" }
         },
-        "FunctionName" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-Pessoa-MainFunction"]] },
-        "Description": { "Fn::Join": ["", [{ "Ref": "AppName" }, "-Pessoa-MainFunction"]] },
+        "FunctionName" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-Empresa-MainFunction"]] },
+        "Description": { "Fn::Join": ["", [{ "Ref": "AppName" }, "-Empresa-MainFunction"]] },
         "Handler": "main.handler",
         "MemorySize": 128,
         "Role": {
@@ -133,25 +133,25 @@
       }
     },
 
-    "ApiResourcePessoas": {
+    "ApiResourceEmpresas": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "RestApiId": { "Ref": "AppRestAPI" },
         "ParentId": { "Ref": "AppRestAPIRootResource" },
-        "PathPart": "pessoa"
+        "PathPart": "empresa"
       }
     },
 
-    "ApiResourcePessoa": {
+    "ApiResourceEmpresa": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "RestApiId": { "Ref": "AppRestAPI" },
-        "ParentId": { "Ref": "ApiResourcePessoas" },
-        "PathPart": "{pessoaId}"
+        "ParentId": { "Ref": "ApiResourceEmpresas" },
+        "PathPart": "{empresaId}"
       }
     },
 
-    "ApiResourcePessoaGET": {
+    "ApiResourceEmpresaGET": {
       "DependsOn": "GatewayInvokeLambdaPermission",
       "Type": "AWS::ApiGateway::Method",
       
@@ -160,8 +160,8 @@
         "AuthorizationType": "NONE",
         "HttpMethod": "GET",
         "RestApiId": { "Ref": "AppRestAPI" },
-        "ResourceId": { "Ref": "ApiResourcePessoa" },
-        "RequestParameters": { "method.request.path.pessoaId": true },
+        "ResourceId": { "Ref": "ApiResourceEmpresa" },
+        "RequestParameters": { "method.request.path.empresaId": true },
         "Integration": {
           "Type": "AWS_PROXY",
           "IntegrationHttpMethod": "POST",
@@ -171,7 +171,7 @@
       }
     },
 
-    "ApiResourcePessoaPOST": {
+    "ApiResourceEmpresaPOST": {
       "DependsOn": "GatewayInvokeLambdaPermission",
       "Type": "AWS::ApiGateway::Method",
       
@@ -180,7 +180,7 @@
         "AuthorizationType": "NONE",
         "HttpMethod": "POST",
         "RestApiId": { "Ref": "AppRestAPI" },
-        "ResourceId": { "Ref": "ApiResourcePessoas" },
+        "ResourceId": { "Ref": "ApiResourceEmpresas" },
         "Integration": {
           "Type": "AWS_PROXY",
           "IntegrationHttpMethod": "POST",
@@ -190,7 +190,7 @@
       }
     },
 
-    "ApiResourcePessoaPUT": {
+    "ApiResourceEmpresaPUT": {
       "DependsOn": "GatewayInvokeLambdaPermission",
       "Type": "AWS::ApiGateway::Method",
       
@@ -199,8 +199,8 @@
         "AuthorizationType": "NONE",
         "HttpMethod": "PUT",
         "RestApiId": { "Ref": "AppRestAPI" },
-        "ResourceId": { "Ref": "ApiResourcePessoa" },
-        "RequestParameters": { "method.request.path.pessoaId": true },
+        "ResourceId": { "Ref": "ApiResourceEmpresa" },
+        "RequestParameters": { "method.request.path.empresaId": true },
         "Integration": {
           "Type": "AWS_PROXY",
           "IntegrationHttpMethod": "POST",
@@ -210,7 +210,7 @@
       }
     },
 
-    "ApiResourcePessoaDELETE": {
+    "ApiResourceEmpresaDELETE": {
       "DependsOn": "GatewayInvokeLambdaPermission",
       "Type": "AWS::ApiGateway::Method",
       
@@ -219,8 +219,8 @@
         "AuthorizationType": "NONE",
         "HttpMethod": "DELETE",
         "RestApiId": { "Ref": "AppRestAPI" },
-        "ResourceId": { "Ref": "ApiResourcePessoa" },
-        "RequestParameters": { "method.request.path.pessoaId": true },
+        "ResourceId": { "Ref": "ApiResourceEmpresa" },
+        "RequestParameters": { "method.request.path.empresaId": true },
         "Integration": {
           "Type": "AWS_PROXY",
           "IntegrationHttpMethod": "POST",
@@ -268,7 +268,7 @@
     "GraphQLEndpoint": {
       "Type" : "AWS::AppSync::GraphQLApi",
       "Properties" : {
-        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-PessoaGraphQL"]] },
+        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-EmpresaGraphQL"]] },
         "AuthenticationType" : "AWS_IAM",
         "LogConfig" : {
           "CloudWatchLogsRoleArn" : { "Fn::GetAtt": ["AppSyncExecutionRole", "Arn"] },
@@ -284,7 +284,7 @@
         "Description" : "Microservice Main Repository",
         "ServiceRoleArn" : { "Fn::GetAtt": ["AppSyncExecutionRole", "Arn"] },
         "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
-        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "PessoaMainRepo"]] },
+        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "EmpresaMainRepo"]] },
         "DynamoDBConfig" : {
           "TableName" : { "Ref": "ServiceTableName" },
           "AwsRegion" : { "Ref" : "AWS::Region" },
@@ -297,11 +297,11 @@
       "Type" : "AWS::AppSync::GraphQLSchema",
       "Properties" : {
         "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
-        "DefinitionS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-schema.graphql"]] }
+        "DefinitionS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-schema.graphql"]] }
       }
     },
 
-    "GraphQLQueryByIdResolver": {
+    "GraphQLQueryResolver": {
       "Type" : "AWS::AppSync::Resolver",
       "DependsOn": "GraphQLSchema",
       "Properties" : {
@@ -309,21 +309,8 @@
         "TypeName" : "Query",
         "FieldName" : "byId",
         "DataSourceName" : { "Fn::GetAtt": ["GraphQLDataSource", "Name"] },
-        "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryById.requestmap.velocity"]] },
-        "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryById.responsemap.velocity"]] }
-      }
-    },
-
-    "GraphQLQueryAllResolver": {
-      "Type" : "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQLSchema",
-      "Properties" : {
-        "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
-        "TypeName" : "Query",
-        "FieldName" : "all",
-        "DataSourceName" : { "Fn::GetAtt": ["GraphQLDataSource", "Name"] },
-        "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryAll.requestmap.velocity"]] },
-        "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryAll.responsemap.velocity"]] }
+        "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryById.requestmap.velocity"]] },
+        "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryById.responsemap.velocity"]] }
       }
     }
 

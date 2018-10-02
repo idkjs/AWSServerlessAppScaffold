@@ -301,7 +301,7 @@
       }
     },
 
-    "GraphQLQueryByIdResolver": {
+    "GraphQLQueryResolver": {
       "Type" : "AWS::AppSync::Resolver",
       "DependsOn": "GraphQLSchema",
       "Properties" : {
@@ -311,19 +311,6 @@
         "DataSourceName" : { "Fn::GetAtt": ["GraphQLDataSource", "Name"] },
         "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryById.requestmap.velocity"]] },
         "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryById.responsemap.velocity"]] }
-      }
-    },
-
-    "GraphQLQueryAllResolver": {
-      "Type" : "AWS::AppSync::Resolver",
-      "DependsOn": "GraphQLSchema",
-      "Properties" : {
-        "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
-        "TypeName" : "Query",
-        "FieldName" : "all",
-        "DataSourceName" : { "Fn::GetAtt": ["GraphQLDataSource", "Name"] },
-        "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryAll.requestmap.velocity"]] },
-        "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/pessoa-queryAll.responsemap.velocity"]] }
       }
     }
 

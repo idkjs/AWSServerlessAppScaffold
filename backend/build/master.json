@@ -1,0 +1,170 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Master Stack for Application",
+  "Parameters": {
+    "AppName": {
+      "Type": "String",
+      "Description": "The Name of the Application",
+      "AllowedPattern": "(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)",
+      "ConstraintDescription": "must be a url compatible."
+    },
+    "BucketName": {
+      "Type": "String",
+      "Description": "The Name of the Bucket were templates and resources are located!",
+      "AllowedPattern": "(?!-)[a-zA-Z0-9-.]{1,63}(?<!-)",
+      "ConstraintDescription": "must be a url compatible."
+    }
+  },
+  "Resources": {
+    "AuthPool": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://s3.amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "/authentication.json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          }
+        }
+      }
+    },
+    "AppApi": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://s3.amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "/apidefinition.json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          }
+        }
+      }
+    },
+    "MicroserviceEmpresa": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://s3.amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "/",
+              "empresa",
+              ".json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          },
+          "FunctionBucket": {
+            "Ref": "BucketName"
+          },
+          "FunctionKey": "empresa-ef276c096569c4112a3837aa6c0573a9.zip",
+          "AppBaseUrl": "https://www.exemplo.com",
+          "AppRestAPI": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIReference"
+            ]
+          },
+          "AppRestAPIRootResource": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIRootResource"
+            ]
+          }
+        }
+      }
+    },
+    "MicroservicePessoa": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://s3.amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "/",
+              "pessoa",
+              ".json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppName": {
+            "Ref": "AppName"
+          },
+          "FunctionBucket": {
+            "Ref": "BucketName"
+          },
+          "FunctionKey": "pessoa-f3c07dac63d85940d467c93c115ee1ef.zip",
+          "AppBaseUrl": "https://www.exemplo.com",
+          "AppRestAPI": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIReference"
+            ]
+          },
+          "AppRestAPIRootResource": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIRootResource"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "AppApi": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AppApi",
+          "Outputs.AppRestAPIReference"
+        ]
+      },
+      "Description": "Application RestAPI definition"
+    },
+    "AppApiRootResource": {
+      "Value": {
+        "Fn::GetAtt": [
+          "AppApi",
+          "Outputs.AppRestAPIRootResource"
+        ]
+      },
+      "Description": "Application RestAPI definition"
+    }
+  }
+}

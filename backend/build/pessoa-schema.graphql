@@ -1,0 +1,25 @@
+type Pessoa {
+	itemId: ID!
+	nome: String!
+	legacyId: Int
+	alias: String
+	cpf: String
+	sexo: String
+	dataNascimento: String
+	estadoCivil: AWSJSON
+	naturalidade: AWSJSON
+	nacionalidade: AWSJSON
+	filiacao: AWSJSON
+	enderecos: AWSJSON
+	contatos: AWSJSON
+	documentos: AWSJSON
+}
+
+type Query {
+	#     # Get a single value of type 'Post' by primary key.
+	byId(itemId: ID!): Pessoa
+}
+
+schema {
+	query: Query
+}

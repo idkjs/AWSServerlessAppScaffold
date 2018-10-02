@@ -268,7 +268,7 @@
     "GraphQLEndpoint": {
       "Type" : "AWS::AppSync::GraphQLApi",
       "Properties" : {
-        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-Empresa-GraphQL"]] },
+        "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-EmpresaGraphQL"]] },
         "AuthenticationType" : "AWS_IAM",
         "LogConfig" : {
           "CloudWatchLogsRoleArn" : { "Fn::GetAtt": ["AppSyncExecutionRole", "Arn"] },
@@ -301,7 +301,7 @@
       }
     },
 
-    "GraphQLQueryResolver": {
+    "GraphQLQueryByIdResolver": {
       "Type" : "AWS::AppSync::Resolver",
       "DependsOn": "GraphQLSchema",
       "Properties" : {
@@ -311,6 +311,19 @@
         "DataSourceName" : { "Fn::GetAtt": ["GraphQLDataSource", "Name"] },
         "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryById.requestmap.velocity"]] },
         "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryById.responsemap.velocity"]] }
+      }
+    },
+
+    "GraphQLQueryAllResolver": {
+      "Type" : "AWS::AppSync::Resolver",
+      "DependsOn": "GraphQLSchema",
+      "Properties" : {
+        "ApiId" : { "Fn::GetAtt": ["GraphQLEndpoint", "ApiId"] },
+        "TypeName" : "Query",
+        "FieldName" : "all",
+        "DataSourceName" : { "Fn::GetAtt": ["GraphQLDataSource", "Name"] },
+        "RequestMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryAll.requestmap.velocity"]] },
+        "ResponseMappingTemplateS3Location" : { "Fn::Join": ["", ["s3://", { "Ref": "FunctionBucket" }, "/empresa-queryAll.responsemap.velocity"]] }
       }
     }
 
