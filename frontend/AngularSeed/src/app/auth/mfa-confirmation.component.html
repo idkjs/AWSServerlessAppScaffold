@@ -1,0 +1,27 @@
+<div class="login-page" [@routerTransition]>
+  <div class="row justify-content-md-center">
+      <div class="col-md-4">
+          <img src="assets/images/logo.png" width="150px" class="user-avatar" />
+          <h1>SB Admin BS4 Angular5</h1>
+          <form role="form" #f="ngForm">
+              <div class="form-content">
+
+                  <div class="form-group">
+                      <input type="password" ngModel class="form-control input-underline input-lg" name="confirmCode" placeholder="Confirmation Code">
+                  </div>
+
+                  <div *ngIf="submissionError" class="alert alert-danger"> {{ submissionError }} </div>
+                  <div *ngIf="submissionStatus" class="alert alert-success"> {{ submissionStatus }} </div>
+
+              </div>
+              <a class="btn rounded-btn" (click)="onConfirmation(f)">Confirm</a>
+              &nbsp;
+              <a class="btn rounded-btn" [routerLink]="['/signup']">RequestNewCode</a>
+
+          </form>
+
+          <app-auth-loadspinner  *ngIf="submitted"></app-auth-loadspinner>
+          
+      </div>
+  </div>
+</div>

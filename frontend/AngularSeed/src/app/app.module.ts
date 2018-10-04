@@ -1,71 +1,41 @@
-import { BrowserModule } from '@angular/platform-browser';
+import { CommonModule } from '@angular/common';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
+import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { TopbarComponent } from './navigation/topbar/topbar.component';
-import { SidebarComponent } from './navigation/sidebar/sidebar.component';
-import { HomeComponent } from './navigation/home/home.component';
-import { AwsCognito } from './providers/aws-cognito';
-import { AuthService } from './services/auth-service';
-import { LoginComponent } from './navigation/login/login.component';
+import { AuthGuard } from './shared';
+import { AuthModule } from './auth/auth.module';
+import { AuthService } from './auth/auth.service';
+import { CognitoProvider } from './auth/providers/cognito-provider';
+
+// AoT requires an exported function for factories
+export const createTranslateLoader = (http: HttpClient) => {
+    return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+};
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    TopbarComponent,
-    SidebarComponent,
-    HomeComponent,
-    LoginComponent
-  ],
-  imports: [ BrowserModule, FormsModule ],
-  providers: [ {provide: 'AUTH_PROVIDER',  useValue: new AwsCognito()}, AuthService],
-  bootstrap: [AppComponent]
+    imports: [
+        CommonModule,
+        BrowserModule,
+        BrowserAnimationsModule,
+        HttpClientModule,
+        TranslateModule.forRoot({
+            loader: {
+                provide: TranslateLoader,
+                useFactory: createTranslateLoader,
+                deps: [HttpClient]
+            }
+        }),
+        AppRoutingModule,
+        AuthModule
+    ],
+    declarations: [AppComponent],
+    providers: [{provide: 'AUTH_PROVIDER',  useValue: new CognitoProvider() }, AuthGuard, AuthService],
+    bootstrap: [AppComponent]
 })
-export class AppModule { }
-
-// import { NgModule } from '@angular/core';
-// import { BrowserModule } from '@angular/platform-browser';
-// import { FormsModule } from '@angular/forms';
-// import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-
-// // used to create fake backend
-// import { fakeBackendProvider } from './providers/fake-backend';
-// import { AlertService, AuthenticationService, UserService } from './services';
-// import { JwtInterceptor, ErrorInterceptor } from './interceptors';
-
-// import { routing } from './app.routing';
-// import { AuthGuard } from './routing/auth.guard';
-
-// import { AppComponent } from './app.component';
-// import { HomeComponent, LoginComponent, RegisterComponent, AlertComponent } from './navigation';
-
-// @NgModule({
-//     imports: [
-//         BrowserModule,
-//         FormsModule,
-//         HttpClientModule,
-//         routing
-//     ],
-//     declarations: [
-//         AppComponent,
-//         HomeComponent,
-//         LoginComponent,
-//         RegisterComponent,
-//         AlertComponent
-//     ],
-//     providers: [
-//         { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
-//         { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
-
-//         // provider used to create fake backend
-//         fakeBackendProvider,
-//         AuthGuard,
-//         AlertService,
-//         AuthenticationService,
-//         UserService
-//     ],
-//     bootstrap: [AppComponent]
-// })
-
-// export class AppModule { }
+export class AppModule {}

@@ -1,16 +1,14 @@
-import { Component } from '@angular/core';
-import { NgForm } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
 
-@Component({ selector: 'app-root', templateUrl: './app.component.html', styleUrls: ['./app.component.css'] })
-export class AppComponent {
+@Component({
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss']
+})
+export class AppComponent implements OnInit {
+    constructor() {
+    }
 
-  title = 'AngularSeed';
-  logged: boolean;
-
-  constructor() { }
-
-  onSubmit(form: NgForm) {
-
-  }
-
+    ngOnInit() {
+    }
 }
