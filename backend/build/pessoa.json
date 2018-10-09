@@ -34,6 +34,11 @@
     "AppBaseUrl": {
       "Type": "String",
       "Description": "Define the base url for the application"
+    },
+
+    "AppUserPoolId": {
+      "Type": "String",
+      "Description": "Cognito User Pool of Application"
     }
 
   },
@@ -269,7 +274,12 @@
       "Type" : "AWS::AppSync::GraphQLApi",
       "Properties" : {
         "Name" : { "Fn::Join": ["", [{ "Ref": "AppName" }, "-PessoaGraphQL"]] },
-        "AuthenticationType" : "AWS_IAM",
+        "AuthenticationType" : "AMAZON_COGNITO_USER_POOLS",
+        "UserPoolConfig": {
+          "UserPoolId" : { "Ref": "AppUserPoolId" },
+          "AwsRegion" : { "Ref" : "AWS::Region" },
+          "DefaultAction" : "ALLOW"
+        },
         "LogConfig" : {
           "CloudWatchLogsRoleArn" : { "Fn::GetAtt": ["AppSyncExecutionRole", "Arn"] },
           "FieldLogLevel" : "NONE"

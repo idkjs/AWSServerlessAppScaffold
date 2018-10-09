@@ -43,17 +43,17 @@ export class AuthService {
     this.provider.forgotPassword(username, callback);
   }
 
-  confirmRegistration(username: string, confirmationCode: string, callback: AuthProviderCallback): void {
-    this.provider.confirmRegistration(username, confirmationCode, callback);
+  confirmRegistration(confirmationCode: string, callback: AuthProviderCallback): void {
+    this.provider.confirmRegistration(confirmationCode, callback);
   }
 
-  confirmNewPassword(username: string, newPassword: string,
+  confirmNewPassword(newPassword: string,
     newAttributes: AuthUser, callback?: AuthProviderCallback) {
-    this.provider.confirmNewPassword(username, newPassword, newAttributes, callback);
+    this.provider.confirmNewPassword(newPassword, newAttributes, callback);
   }
 
-  confirmMFA(username: string, confirmationCode: string, callback?: (err: Error, statusCode: string) => void) {
-    this.provider.confirmMFA(username, confirmationCode, callback);
+  confirmMFA(confirmationCode: string, callback?: AuthProviderCallback) {
+    this.provider.confirmMFA(confirmationCode, callback);
   }
 
   confirmPassword(username: string, verificationCode: string, newPassword: string, callback: (error: Error, statusCode: string) => void): void {
@@ -66,5 +66,7 @@ export class AuthService {
   }
 
   isLogged(): boolean { return this.provider.isLogged(); }
+
+  challengeInfo(): any { return this.provider.challengeInfo(); }
 
 }

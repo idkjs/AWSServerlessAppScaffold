@@ -23,16 +23,17 @@ export class LoginComponent implements OnInit {
 
         this.authService.authenticate(username, password, (err, statusCode) => {
 
-            console.log(err);
-            console.log(statusCode);
-
             this.submitted = false;
             if (statusCode === AuthService.statusCodes.newPasswordRequired) {
-                this.router.navigate(['newpassword', username]);
+                this.router.navigate(['newpassword']);
                 return;
 
-            } else if (statusCode === AuthService.statusCodes.verificationCodeRequired) {
-                this.router.navigate(['mfaconfirmation', username]);
+            } else if (statusCode === AuthService.statusCodes.mfaCodeRequired) {
+                this.router.navigate(['mfaconfirmation']);
+                return;
+
+            } else if (statusCode === AuthService.statusCodes.userConfirmationRequired) {
+                this.router.navigate(['userconfirmation']);
                 return;
 
             } else if (statusCode === AuthService.statusCodes.signedIn || statusCode === AuthService.statusCodes.success ) {

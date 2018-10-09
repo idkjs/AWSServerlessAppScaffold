@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { routerTransition } from '../router.animations';
 import { AuthService } from './auth.service';
 import { NgForm } from '@angular/forms';
@@ -11,13 +11,9 @@ export class UserConfirmationComponent implements OnInit {
   submissionError: string;
   submissionStatus: string;
 
-  private username: string;
+  constructor(public router: Router, private authService: AuthService) {}
 
-  constructor(public router: Router, private fromroute: ActivatedRoute, private authService: AuthService) {}
-
-  ngOnInit() {
-    this.username = this.fromroute.snapshot.paramMap.get('username');
-  }
+  ngOnInit() { }
 
   onConfirmation(form: NgForm) {
 
@@ -25,13 +21,13 @@ export class UserConfirmationComponent implements OnInit {
 
       this.submissionError = null;
       this.submitted = true;
-      this.authService.confirmRegistration(this.username, confirmationCode, (err, statusCode) => {
+      this.authService.confirmRegistration(confirmationCode, (err, statusCode) => {
 
         this.submitted = false;
         if (statusCode === AuthService.statusCodes.success) {
 
-          this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 5 seconds';
-          setTimeout(() => { this.router.navigate(['home']); }, 4000);
+          this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 3 seconds';
+          setTimeout(() => {this.router.navigate([this.authService.startRoute]); }, 3000);
           return;
 
         } else if (statusCode === AuthService.statusCodes.incompletedSigninData) {
@@ -39,7 +35,11 @@ export class UserConfirmationComponent implements OnInit {
           return;
 
         } else if (statusCode === AuthService.statusCodes.unknownError) {
-          this.submissionError = JSON.stringify(err); }
+          this.submissionError = JSON.stringify(err);
+        } else {
+          console.log(statusCode);
+          console.log(err);
+        }
 
       });
 

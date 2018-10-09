@@ -27,7 +27,9 @@ export class CognitoProvider implements AuthProvider {
     private userPool = new CognitoUserPool(Config.cognito.userPool);
     private currentStatus = 'unknown';
     private authDetails: AuthenticationDetails;
+    private cognitoUser: CognitoUser;
     private session: CognitoUserSession;
+    private challengeInfoDetails: any;
     private cognitoAwsCredentials: CognitoIdentityCredentials;
 
     constructor() { }
@@ -56,7 +58,7 @@ export class CognitoProvider implements AuthProvider {
             if (!err) {
 
                 if (result.userConfirmed) {callback(null, AuthService.statusCodes.success);
-                } else { callback(null, AuthService.statusCodes.userConfirmationRequired); }
+                } else { this.cognitoUser = result.user; callback(null, AuthService.statusCodes.userConfirmationRequired); }
 
             } else { callback(err, this.parseCognitoError(err)); }
 
@@ -82,19 +84,18 @@ export class CognitoProvider implements AuthProvider {
 
     }
 
-    confirmNewPassword(username: string, newPassword: string, newAttributes: AuthUser, callback?: AuthProviderCallback) {
+    confirmNewPassword(newPassword: string, newAttributes: AuthUser, callback?: AuthProviderCallback) {
 
-        if (!this.authDetails) {
+        if (!this.cognitoUser) {
             const error: Error = {name: AuthService.statusCodes.authProcessNotInitiated, message: 'AuthProcess Not Initiated!'};
             callback(error, null);
             return;
         }
 
-        const cognitoUser = this.getCognitoUserByUsername(username);
         const newData = newAttributes !== null ? {...newAttributes} : {};
-        cognitoUser.authenticateUser(this.authDetails, {
+        this.cognitoUser.completeNewPasswordChallenge(newPassword, newData, {
 
-            onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
+            onSuccess: (session: CognitoUserSession) => {
                 this.session = session;
                 this.currentStatus = AuthService.statusCodes.success;
                 callback(null, AuthService.statusCodes.success);
@@ -102,36 +103,115 @@ export class CognitoProvider implements AuthProvider {
 
             onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
 
-            newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
-                cognitoUser.completeNewPasswordChallenge(newPassword, newData, {
+            mfaRequired: (challengeName: any, challengeParameters: any) => {
+                this.challengeInfoDetails = {challengeName: challengeName, challengeParameters: challengeParameters};
+                this.currentStatus = AuthService.statusCodes.mfaCodeRequired;
+                callback(null, AuthService.statusCodes.mfaCodeRequired, {challengeName: challengeName, challengeParameters: challengeParameters});
+            }
 
-                    onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
-                        this.session = session;
-                        this.currentStatus = AuthService.statusCodes.success;
-                        callback(null, AuthService.statusCodes.success);
-                    },
+        } );
 
-                    onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
+        // if (!this.authDetails) {
+        //     const error: Error = {name: AuthService.statusCodes.authProcessNotInitiated, message: 'AuthProcess Not Initiated!'};
+        //     callback(error, null);
+        //     return;
+        // }
 
-                    mfaRequired: (challengeName: any, challengeParameters: any) => {
-                        this.currentStatus = AuthService.statusCodes.mfaCodeRequired;
-                        callback(null, AuthService.statusCodes.mfaCodeRequired, {challengeName: challengeName, challengeParameters: challengeParameters});
-                    }
+        // const cognitoUser = this.getCognitoUserByUsername(username);
+        // const newData = newAttributes !== null ? {...newAttributes} : {};
+        // cognitoUser.authenticateUser(this.authDetails, {
 
-                } );
-            },
+        //     onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
+        //         this.session = session;
+        //         this.currentStatus = AuthService.statusCodes.success;
+        //         callback(null, AuthService.statusCodes.success);
+        //     },
 
-            mfaRequired: (challengeName: any, challengeParameters: any) => {}
+        //     onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
 
-        });
+        //     newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
+        //         cognitoUser.completeNewPasswordChallenge(newPassword, newData, {
+
+        //             onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
+        //                 this.session = session;
+        //                 this.currentStatus = AuthService.statusCodes.success;
+        //                 callback(null, AuthService.statusCodes.success);
+        //             },
+
+        //             onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
+
+        //             mfaRequired: (challengeName: any, challengeParameters: any) => {
+        //                 this.currentStatus = AuthService.statusCodes.mfaCodeRequired;
+        //                 callback(null, AuthService.statusCodes.mfaCodeRequired, {challengeName: challengeName, challengeParameters: challengeParameters});
+        //             }
+
+        //         } );
+        //     },
+
+        //     mfaRequired: (challengeName: any, challengeParameters: any) => {
+        //         this.currentStatus = AuthService.statusCodes.mfaCodeRequired;
+        //         callback(null, AuthService.statusCodes.mfaCodeRequired, {challengeName: challengeName, challengeParameters: challengeParameters});
+        //     }
+
+        // });
 
     }
 
-    confirmMFA(username: string, confirmationCode: string, callback?: (err: Error, statusCode: string) => void) {
+    confirmMFA(confirmationCode: string, callback?: AuthProviderCallback) {
 
-        const cognitoUser = this.getCognitoUserByUsername(username);
-        const handler = this.cognitoResultHandler(cognitoUser, callback);
-        cognitoUser.sendMFACode(confirmationCode, handler);
+        if (!this.cognitoUser) {
+            const error: Error = {name: AuthService.statusCodes.authProcessNotInitiated, message: 'AuthProcess Not Initiated!'};
+            callback(error, null);
+            return;
+        }
+
+        this.cognitoUser.sendMFACode(confirmationCode, {
+
+            onSuccess: (session: CognitoUserSession) => {
+                this.session = session;
+                this.currentStatus = AuthService.statusCodes.success;
+                callback(null, AuthService.statusCodes.success);
+            },
+            onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); }
+
+        });
+
+        // if (!this.authDetails) {
+        //     const error: Error = {name: AuthService.statusCodes.authProcessNotInitiated, message: 'AuthProcess Not Initiated!'};
+        //     callback(error, null);
+        //     return;
+        // }
+
+        // const cognitoUser = this.getCognitoUserByUsername(username);
+        // cognitoUser.authenticateUser(this.authDetails, {
+
+        //     onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
+        //         this.session = session;
+        //         this.currentStatus = AuthService.statusCodes.success;
+        //         callback(null, AuthService.statusCodes.success);
+        //     },
+
+        //     onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
+
+        //     newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
+        //         this.currentStatus = AuthService.statusCodes.newPasswordRequired;
+        //         callback(null, AuthService.statusCodes.newPasswordRequired, requiredAttributes);
+        //     },
+
+        //     mfaRequired: (challengeName: any, challengeParameters: any) => {
+        //         cognitoUser.sendMFACode(confirmationCode, {
+
+        //             onSuccess: (session: CognitoUserSession) => {
+        //                 this.session = session;
+        //                 this.currentStatus = AuthService.statusCodes.success;
+        //                 callback(null, AuthService.statusCodes.success);
+        //             },
+        //             onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); }
+
+        //         });
+        //     }
+
+        // });
 
     }
 
@@ -174,7 +254,7 @@ export class CognitoProvider implements AuthProvider {
         }
 
         const authService = this;
-        const cognitoUser = new CognitoUser({ Username: username, Pool: this.userPool});
+        const cognitoUser = this.getCognitoUserByUsername(username);
 
         cognitoUser.confirmPassword(verficationCode, newPassword, {
 
@@ -191,11 +271,16 @@ export class CognitoProvider implements AuthProvider {
         });
     }
 
-    confirmRegistration(username: string, confirmationCode: string, callback: AuthProviderCallback): void {
+    confirmRegistration(confirmationCode: string, callback: AuthProviderCallback): void {
+
+        if (!this.cognitoUser) {
+            const error: Error = {name: AuthService.statusCodes.authProcessNotInitiated, message: 'AuthProcess Not Initiated!'};
+            callback(error, null);
+            return;
+        }
 
         const cognitoService = this;
-        const cognitoUser = this.getCognitoUserByUsername(username);
-        cognitoUser.confirmRegistration(confirmationCode, true, function (err, result) {
+        this.cognitoUser.confirmRegistration(confirmationCode, true, function (err, result) {
 
             if (err) { callback(err.message, cognitoService.parseCognitoError(err));
             } else { callback(null, AuthService.statusCodes.success); }
@@ -213,6 +298,8 @@ export class CognitoProvider implements AuthProvider {
         }
 
     }
+
+    challengeInfo(): any { return this.challengeInfoDetails; }
 
     updateUserInfo(userInfo: AuthUser, callback: (error: Error, statusCode: string) => void): void {
 
@@ -286,6 +373,7 @@ export class CognitoProvider implements AuthProvider {
 
     private cognitoResultHandler(user: CognitoUser, callback?: AuthProviderCallback): IAuthenticationCallback {
 
+        this.cognitoUser = user;
         return {
 
             onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
@@ -302,7 +390,8 @@ export class CognitoProvider implements AuthProvider {
             },
 
             mfaRequired: (challengeName: any, challengeParameters: any) => {
-                this.currentStatus = AuthService.statusCodes.verificationCodeRequired;
+                this.challengeInfoDetails = {challengeName: challengeName, challengeParameters: challengeParameters};
+                this.currentStatus = AuthService.statusCodes.mfaCodeRequired;
                 callback(null, AuthService.statusCodes.mfaCodeRequired, {challengeName: challengeName, challengeParameters: challengeParameters});
             },
 
@@ -318,7 +407,7 @@ export class CognitoProvider implements AuthProvider {
     private getCognitoUserByUsername(username?: string): CognitoUser {
 
         if (!username) { return undefined; }
-        const cognitoUser = this.userPool.getCurrentUser();
+        const cognitoUser = this.cognitoUser !== undefined ? this.cognitoUser : this.userPool.getCurrentUser();
 
         if (cognitoUser && cognitoUser.getUsername() === username) {return cognitoUser;
         } else {return new CognitoUser({ Username: username, Pool: this.userPool }); }
@@ -413,6 +502,7 @@ export class CognitoProvider implements AuthProvider {
 
     private parseCognitoError(err: Error): string {
 
+        console.log(err);
         switch (err.name) {
             case 'InvalidPasswordException':
                 return AuthService.statusCodes.invalidPassword;
@@ -429,7 +519,6 @@ export class CognitoProvider implements AuthProvider {
             case 'CodeMismatchException':
                 return AuthService.statusCodes.invalidConfirmationCode;
             default:
-                console.log(err);
                 return AuthService.statusCodes.unknownError;
         }
 

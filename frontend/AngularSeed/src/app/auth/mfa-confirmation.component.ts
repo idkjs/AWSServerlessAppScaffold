@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { routerTransition } from '../router.animations';
 import { AuthService } from './auth.service';
 import { NgForm } from '@angular/forms';
@@ -10,14 +10,11 @@ export class MfaConfirmationComponent implements OnInit {
   submitted = false;
   submissionError: string;
   submissionStatus: string;
+  mfaDetails: string;
 
-  private username: string;
+  constructor(public router: Router, private authService: AuthService) {}
 
-  constructor(public router: Router, private fromroute: ActivatedRoute, private authService: AuthService) {}
-
-  ngOnInit() {
-    this.username = this.fromroute.snapshot.paramMap.get('username');
-  }
+  ngOnInit() { this.mfaDetails = JSON.stringify(this.authService.challengeInfo()); }
 
   onConfirmation(form: NgForm) {
 
@@ -25,14 +22,13 @@ export class MfaConfirmationComponent implements OnInit {
 
       this.submissionError = null;
       this.submitted = true;
-      this.authService.confirmMFA(this.username, confirmationCode, (err, statusCode) => {
+      this.authService.confirmMFA(confirmationCode, (err, statusCode) => {
 
         this.submitted = false;
-        console.log(statusCode);
-        if (statusCode === AuthService.statusCodes.signedIn) {
+        if (statusCode === AuthService.statusCodes.signedIn || statusCode === AuthService.statusCodes.success) {
 
-          this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 5 seconds';
-          setTimeout(() => { this.router.navigate(['home']); }, 4000);
+          this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 3 seconds';
+          setTimeout(() => { this.router.navigate([this.authService.startRoute]); }, 3000);
           return;
 
         } else if (statusCode === AuthService.statusCodes.incompletedSigninData) {

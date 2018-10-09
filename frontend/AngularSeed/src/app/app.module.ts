@@ -25,7 +25,7 @@ export const createTranslateLoader = (http: HttpClient) => {
     bootstrap: [AppComponent],
     providers: [
         {provide: 'AUTH_PROVIDER',  useValue: new CognitoProvider() },
-        {provide: 'HOME_ROUTE',  useValue: 'home' },
+        {provide: 'HOME_ROUTE',  useValue: '' },
         AuthService
     ]
 })

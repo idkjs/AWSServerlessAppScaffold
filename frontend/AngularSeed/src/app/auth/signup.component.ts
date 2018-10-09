@@ -21,8 +21,10 @@ export class SignupComponent implements OnInit {
 
         this.submissionError = null;
         this.submitted = true;
-        const username = form.value.username;
+        const username = form.value.email;
+        const name = form.value.username;
         const email = form.value.email;
+        const phone = form.value.phone;
         const password = form.value.password;
         const confirm = form.value.passwordConfirmation;
 
@@ -34,11 +36,8 @@ export class SignupComponent implements OnInit {
         } else {
 
             this.submitted = true;
-            const newUser = {username: username, email: email};
+            const newUser = {username: username, name: name, email: email, phone_number: phone, custom: {empresaId: '12345'}};
             this.authService.register(newUser, password, (err, statusCode) => {
-
-                console.log(err);
-                console.log(statusCode);
 
                 this.submitted = false;
                 if (statusCode === AuthService.statusCodes.newPasswordRequired) {
@@ -46,11 +45,11 @@ export class SignupComponent implements OnInit {
                     return;
 
                 } else if (statusCode === AuthService.statusCodes.userConfirmationRequired) {
-                    this.router.navigate(['userconfirmation', username]);
+                    this.router.navigate(['userconfirmation']);
                     return;
 
-                } else if (statusCode === AuthService.statusCodes.verificationCodeRequired) {
-                    this.router.navigate(['mfaconfirmation', username]);
+                } else if (statusCode === AuthService.statusCodes.mfaCodeRequired) {
+                    this.router.navigate(['mfaconfirmation']);
                     return;
 
                 } else if (statusCode === AuthService.statusCodes.signedIn || statusCode === AuthService.statusCodes.success) {

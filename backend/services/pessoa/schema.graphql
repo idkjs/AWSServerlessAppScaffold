@@ -21,7 +21,6 @@ type PessoaConnection {
 }
 
 type Query {
-	#     # Get a single value of type 'Post' by primary key.
 	byId(itemId: ID!): Pessoa
 	all(nextToken: String): PessoaConnection
 }

@@ -9,9 +9,9 @@ import { UserConfirmationComponent } from './user-confirmation.component';
 const routes: Routes = [
     { path: 'signin', component: LoginComponent },
     { path: 'signup', component: SignupComponent },
-    { path: 'newpassword/:username', component: NewPasswordComponent },
-    { path: 'mfaconfirmation/:username', component: MfaConfirmationComponent },
-    { path: 'userconfirmation/:username', component: UserConfirmationComponent }
+    { path: 'newpassword', component: NewPasswordComponent },
+    { path: 'mfaconfirmation', component: MfaConfirmationComponent },
+    { path: 'userconfirmation', component: UserConfirmationComponent }
 ];
 
 @NgModule({ imports: [RouterModule.forChild(routes)], exports: [RouterModule] })

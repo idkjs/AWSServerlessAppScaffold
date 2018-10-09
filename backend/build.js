@@ -164,7 +164,8 @@ function generateStackResource(templateName, filename) {
                 FunctionKey: filename,
                 AppBaseUrl: 'https://www.exemplo.com',
                 AppRestAPI: { "Fn::GetAtt" : [ "AppApi", "Outputs.AppRestAPIReference" ] },
-                AppRestAPIRootResource: { "Fn::GetAtt" : [ "AppApi", "Outputs.AppRestAPIRootResource" ] }
+                AppRestAPIRootResource: { "Fn::GetAtt" : [ "AppApi", "Outputs.AppRestAPIRootResource" ] },
+                AppUserPoolId: { "Fn::GetAtt" : [ "AuthPool", "Outputs.UserPoolId" ] }
 
             }
             

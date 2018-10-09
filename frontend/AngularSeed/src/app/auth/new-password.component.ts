@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { routerTransition } from '../router.animations';
 import { AuthService } from './auth.service';
 import { NgForm } from '@angular/forms';
@@ -11,13 +11,9 @@ export class NewPasswordComponent implements OnInit {
   submissionError: string;
   submissionStatus: string;
 
-  private username: string;
+  constructor(public router: Router, private authService: AuthService) {}
 
-  constructor(public router: Router, private fromroute: ActivatedRoute, private authService: AuthService) {}
-
-  ngOnInit() {
-    this.username = this.fromroute.snapshot.paramMap.get('username');
-  }
+  ngOnInit() { }
 
   onConfirmation(form: NgForm) {
 
@@ -32,14 +28,14 @@ export class NewPasswordComponent implements OnInit {
 
         this.submissionError = null;
         this.submitted = true;
-        this.authService.confirmNewPassword(this.username, password, null, (err, statusCode) => {
+        this.authService.confirmNewPassword(password, null, (err, statusCode) => {
 
           this.submitted = false;
           console.log(err);
           if (statusCode === AuthService.statusCodes.success) {
 
-            this.submissionStatus = 'Password change is successful. You will be redirected to signin page within 5 seconds';
-            setTimeout(() => {this.router.navigate([this.authService.startRoute]); }, 3000);
+            this.submissionStatus = 'Password change is successful. You will be redirected to home page within 3 seconds';
+            setTimeout(() => { this.router.navigate([this.authService.startRoute]); }, 3000);
             return;
 
           } else if (statusCode === AuthService.statusCodes.incompletedSigninData) {

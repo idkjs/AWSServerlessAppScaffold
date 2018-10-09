@@ -131,6 +131,12 @@
               "AppApi",
               "Outputs.AppRestAPIRootResource"
             ]
+          },
+          "AppUserPoolId": {
+            "Fn::GetAtt": [
+              "AuthPool",
+              "Outputs.UserPoolId"
+            ]
           }
         }
       }
@@ -172,6 +178,12 @@
             "Fn::GetAtt": [
               "AppApi",
               "Outputs.AppRestAPIRootResource"
+            ]
+          },
+          "AppUserPoolId": {
+            "Fn::GetAtt": [
+              "AuthPool",
+              "Outputs.UserPoolId"
             ]
           }
         }
