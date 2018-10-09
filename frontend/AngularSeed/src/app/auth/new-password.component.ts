@@ -4,12 +4,7 @@ import { routerTransition } from '../router.animations';
 import { AuthService } from './auth.service';
 import { NgForm } from '@angular/forms';
 
-@Component({
-  selector: 'app-new-password',
-  templateUrl: './new-password.component.html',
-  styleUrls: ['./new-password.component.scss'],
-  animations: [routerTransition()] })
-
+@Component({ selector: 'app-new-password', templateUrl: './new-password.component.html', styleUrls: ['./styles/auth.components.scss'], animations: [routerTransition()] })
 export class NewPasswordComponent implements OnInit {
 
   submitted = false;

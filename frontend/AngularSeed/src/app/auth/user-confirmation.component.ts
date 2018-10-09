@@ -4,8 +4,8 @@ import { routerTransition } from '../router.animations';
 import { AuthService } from './auth.service';
 import { NgForm } from '@angular/forms';
 
-@Component({ selector: 'app-mfa-confirmation', templateUrl: './mfa-confirmation.component.html', styleUrls: ['./styles/auth.components.scss'], animations: [routerTransition()] })
-export class MfaConfirmationComponent implements OnInit {
+@Component({ selector: 'app-user-confirmation', templateUrl: './user-confirmation.component.html', styleUrls: ['./styles/auth.components.scss'], animations: [routerTransition()] })
+export class UserConfirmationComponent implements OnInit {
 
   submitted = false;
   submissionError: string;
@@ -25,11 +25,10 @@ export class MfaConfirmationComponent implements OnInit {
 
       this.submissionError = null;
       this.submitted = true;
-      this.authService.confirmMFA(this.username, confirmationCode, (err, statusCode) => {
+      this.authService.confirmRegistration(this.username, confirmationCode, (err, statusCode) => {
 
         this.submitted = false;
-        console.log(statusCode);
-        if (statusCode === AuthService.statusCodes.signedIn) {
+        if (statusCode === AuthService.statusCodes.success) {
 
           this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 5 seconds';
           setTimeout(() => { this.router.navigate(['home']); }, 4000);
@@ -40,7 +39,7 @@ export class MfaConfirmationComponent implements OnInit {
           return;
 
         } else if (statusCode === AuthService.statusCodes.unknownError) {
-          this.submissionError = err.message; }
+          this.submissionError = JSON.stringify(err); }
 
       });
 

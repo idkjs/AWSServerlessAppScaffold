@@ -8,10 +8,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { AuthGuard } from './shared';
-import { AuthModule } from './auth/auth.module';
-import { AuthService } from './auth/auth.service';
-import { CognitoProvider } from './auth/providers/cognito-provider';
+import { AuthModule, AuthService, CognitoProvider } from './auth';
 
 // AoT requires an exported function for factories
 export const createTranslateLoader = (http: HttpClient) => {
@@ -19,23 +16,12 @@ export const createTranslateLoader = (http: HttpClient) => {
 };
 
 @NgModule({
-    imports: [
-        CommonModule,
-        BrowserModule,
-        BrowserAnimationsModule,
-        HttpClientModule,
-        TranslateModule.forRoot({
-            loader: {
-                provide: TranslateLoader,
-                useFactory: createTranslateLoader,
-                deps: [HttpClient]
-            }
-        }),
-        AppRoutingModule,
-        AuthModule
+    imports: [ CommonModule, BrowserModule, BrowserAnimationsModule,
+        HttpClientModule, TranslateModule.forRoot({ loader: { provide: TranslateLoader, useFactory: createTranslateLoader, deps: [HttpClient] } }),
+        AuthModule, AppRoutingModule
     ],
     declarations: [AppComponent],
-    providers: [{provide: 'AUTH_PROVIDER',  useValue: new CognitoProvider() }, AuthGuard, AuthService],
+    providers: [{provide: 'AUTH_PROVIDER',  useValue: new CognitoProvider() }, AuthService],
     bootstrap: [AppComponent]
 })
 export class AppModule {}

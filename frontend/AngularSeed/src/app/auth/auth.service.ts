@@ -1,31 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
-import { Dictionary } from '../shared';
 import { Router } from '@angular/router';
-
-export interface AuthProvider {
-  authenticate(user: SignupData, callback?: (Error, string) => void): void;
-  addAdditionalSignupData(name: string, value: string): void;
-  getUserAttributes( callback: (err?: Error, data?: Dictionary<any>) => void): void;
-  setUserAttribute(name: string, value: string, callback: (err?: Error) => void): void;
-  getCurrentUser(callback: (err?: Error, user?: User) => void): void;
-  forgotPassword(username: string, callback: (error: Error, statusCode: string) => void): void;
-  confirmPassword(verficationCode: string, newPassword: string, callback: (error: Error, statusCode: string) => void): void;
-  signout(): void;
-  isLogged(): boolean;
-}
-
-export interface SignupData {
-  username?: string;
-  password?: string;
-  newPassword?: string;
-  verificationCode?: string;
-  additionalData?: Dictionary<string>;
-}
-
-export class User {
-  static default = new User(false);
-  constructor(public signedIn: boolean, public username?: string, public userId?: string) { }
-}
+import { AuthProvider, AuthUser, AuthProviderCallback } from './auth.types';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -35,35 +10,53 @@ export class AuthService {
     signedIn: 'signedIn',
     signedOut: 'signedOut',
     incompletedSigninData: 'incompletedSigninData',
+    userConfirmationRequired: 'userConfirmationRequired',
     newPasswordRequired: 'newPasswordRequired',
     verificationCodeRequired: 'verificationCodeRequired',
     passwordChanged: 'passwordChanged',
     noSuchUser: 'noSuchUser',
-    unknownError: 'unknownError'
+    invalidPassword: 'invalidPassword',
+    invalidParameter: 'invalidParameter',
+    invalidConfirmationCode: 'invalidConfirmationCode',
+    usernameExists: 'usernameExists',
+    unknownError: 'unknownError',
+    notImplemented: 'notImplemented'
   };
 
-  constructor(@Inject('AUTH_PROVIDER') private provider: AuthProvider, private router: Router) { }
+  constructor(@Inject('AUTH_PROVIDER') private provider: AuthProvider, private router: Router, public startRoute: string = 'home') { }
 
-  authenticate(user: SignupData, callback?: (Error, string) => void): void {
-    this.provider.authenticate(user, callback); }
+  currentUser(callback: (err?: Error, user?: AuthUser) => void): void {
+    this.provider.currentUser(callback);
+  }
 
-  addAdditionalSignupData(name: string, value: string): void {
-    this.provider.addAdditionalSignupData(name, value); }
+  register(userInfo: AuthUser, password: string, callback?: (err: Error, statusCode: string) => void) {
+    this.provider.register(userInfo, password, callback);
+  }
 
-  getUserAttributes( callback: (err?: Error, data?: Dictionary<any>) => void): void {
-    this.provider.getUserAttributes(callback); }
-
-  setUserAttribute(name: string, value: string, callback: (err?: Error) => void): void {
-    this.provider.setUserAttribute(name, value, callback); }
-
-  getCurrentUser(callback: (err?: Error, user?: User) => void): void {
-    this.provider.getCurrentUser(callback); }
+  authenticate(username: string, password: string, callback?: (Error, string) => void): void {
+    this.provider.authenticate(username, password, callback);
+  }
 
   forgotPassword(username: string, callback: (error: Error, statusCode: string) => void): void {
-    this.provider.forgotPassword(username, callback); }
+    this.provider.forgotPassword(username, callback);
+  }
 
-  confirmPassword(verficationCode: string, newPassword: string, callback: (error: Error, statusCode: string) => void): void {
-    this.provider.confirmPassword(verficationCode, newPassword, callback); }
+  confirmRegistration(username: string, confirmationCode: string, callback: AuthProviderCallback): void {
+    this.provider.confirmRegistration(username, confirmationCode, callback);
+  }
+
+  confirmNewPassword(username: string, newPassword: string,
+    newAttributes: AuthUser, callback?: (err: Error, statusCode: string) => void) {
+    this.provider.confirmNewPassword(username, newPassword, newAttributes, callback);
+  }
+
+  confirmMFA(username: string, confirmationCode: string, callback?: (err: Error, statusCode: string) => void) {
+    this.provider.confirmMFA(username, confirmationCode, callback);
+  }
+
+  confirmPassword(username: string, verificationCode: string, newPassword: string, callback: (error: Error, statusCode: string) => void): void {
+    this.provider.confirmPassword(username, verificationCode, newPassword, callback);
+  }
 
   signout(): void {
     this.provider.signout();

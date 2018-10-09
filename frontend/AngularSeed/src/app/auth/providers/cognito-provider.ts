@@ -1,138 +1,110 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+
 import {
+    IAuthenticationCallback,
     CognitoUserPool,
     AuthenticationDetails,
     CognitoUser,
-    ICognitoUserAttributeData,
     CognitoUserAttribute,
     CognitoUserSession
 } from 'amazon-cognito-identity-js';
 import { CognitoIdentityCredentials, config as AWSConfig, AWSError } from 'aws-sdk';
 
 import * as Config from './cognito-config';
-import { User, SignupData, AuthService, AuthProvider } from '../auth.service';
-import { Dictionary } from '../../shared';
+import { AuthUser, AuthProvider, AuthProviderCallback } from '../auth.types';
+import { AuthService } from '../auth.service';
+
+interface ChallengeParameters {
+    CODE_DELIVERY_DELIVERY_MEDIUM: string;
+    CODE_DELIVERY_DESTINATION: string;
+}
 
 @Injectable()
 export class CognitoProvider implements AuthProvider {
 
-    private static userPoolLoginKey = `cognito-idp.${Config.cognito.userPool.region}.amazonaws.com/${Config.cognito.userPool.UserPoolId}`;
+    // private static userPoolLoginKey = `cognito-idp.${Config.cognito.userPool.region}.amazonaws.com/${Config.cognito.userPool.UserPoolId}`;
 
     private userPool = new CognitoUserPool(Config.cognito.userPool);
-    private signupData: SignupData = {};
+    private currentStatus = 'unknown';
     private session: CognitoUserSession;
-    cognitoAwsCredentials: CognitoIdentityCredentials;
-    currentStatus = 'unknown';
+    private cognitoAwsCredentials: CognitoIdentityCredentials;
 
     constructor() { }
 
-    private getCognitoUser(username?: string) {
-        username = username || this.signupData.username;
-        if (!username) {
-            return undefined;
-        }
-        return new CognitoUser({
-            Username: username,
-            Pool: this.userPool
-        });
+    isLogged(): boolean {
+
+        return this.session !== null;
+
     }
 
-    isLogged(): boolean { return this.session !== null; }
+    currentUser(callback: (err?: Error, user?: AuthUser) => void) {
 
-    authenticate(user: SignupData, callback?: (err: Error, statusCode: string) => void) {
+        this.getCurrentCognitoUser((err, cognitoUser) => {
 
-        const authService = this;
-        const username = user.username || this.signupData.username;
-        const password = user.password || this.signupData.password;
+            if (cognitoUser && cognitoUser.getUsername()) {
+                this.parseAuthUser(cognitoUser, callback);
+            } else { callback(err, null); }
+
+        });
+
+    }
+
+    register(userInfo: AuthUser, password: string, callback?: AuthProviderCallback) {
+
+        if (this.isLogged()) { this.signout(); }
+
+        const attributes = this.parseAttributes(userInfo);
+        this.userPool.signUp(userInfo.username, password, attributes, null, (err, result) => {
+
+            if (!err) {
+
+                if (result.userConfirmed) {callback(null, AuthService.statusCodes.success);
+                } else { callback(null, AuthService.statusCodes.userConfirmationRequired); }
+
+            } else { callback(err, this.parseCognitoError(err)); }
+
+        });
+
+    }
+
+    authenticate(username: string, password: string, callback?: (err: Error, statusCode: string) => void) {
 
         if (!username || !password) {
 
             callback(new Error('AuthenticationDetails are incomplete.'), AuthService.statusCodes.incompletedSigninData);
             return;
 
-        } else {
-
-            this.signupData.username = username;
-            this.signupData.password = password;
-
         }
 
-        const cognitoUser = this.getCognitoUser(username);
+        const cognitoUser = this.getCognitoUserByUsername(username);
         const auth = new AuthenticationDetails({ Username: username, Password: password });
-        cognitoUser.authenticateUser(auth, {
+        const handler = this.cognitoResultHandler(cognitoUser, callback);
+        cognitoUser.authenticateUser(auth, handler);
 
-            onSuccess: function (authResult) {
-                authService.currentStatus = AuthService.statusCodes.signedIn;
-                authService.session = authResult;
-                authService.signupData = {};
-                callback(null, AuthService.statusCodes.signedIn);
-            },
+    }
 
-            onFailure: function (err) {
+    confirmNewPassword(username: string, newPassword: string,
+         newAttributes: AuthUser, callback?: (err: Error, statusCode: string) => void) {
 
-                authService.currentStatus = AuthService.statusCodes.unknownError;
-                if (err.code === 'UserNotFoundException' || err.code === 'NotAuthorizedException') {
-                    callback(err, AuthService.statusCodes.noSuchUser);
-                } else {
-                    callback(err, AuthService.statusCodes.unknownError);
-                }
+        const cognitoUser = this.getCognitoUserByUsername(username);
+        const newData = {...newAttributes};
+        const handler = this.cognitoResultHandler(cognitoUser, callback);
+        cognitoUser.completeNewPasswordChallenge(newPassword, newData, handler);
 
-            },
+    }
 
-            newPasswordRequired: function (userAttributes, requiredAttributes) {
+    confirmMFA(username: string, confirmationCode: string, callback?: (err: Error, statusCode: string) => void) {
 
-                if (!user.newPassword) {
+        const cognitoUser = this.getCognitoUserByUsername(username);
+        const handler = this.cognitoResultHandler(cognitoUser, callback);
+        cognitoUser.sendMFACode(confirmationCode, handler);
 
-                    const newNoNewPasswordError = new Error('First time logged in but new password is not provided');
-
-                    if (callback) {
-                        authService.currentStatus = AuthService.statusCodes.newPasswordRequired;
-                        callback(newNoNewPasswordError, AuthService.statusCodes.newPasswordRequired);
-                        return;
-                    } else {
-                        throw newNoNewPasswordError;
-                    }
-                }
-
-                if (authService.signupData) {
-                    userAttributes = Object.assign(userAttributes, authService.signupData.additionalData);
-                }
-
-                delete userAttributes.email_verified;
-                delete userAttributes.phone_number_verified;
-                cognitoUser.completeNewPasswordChallenge(user.newPassword, userAttributes, this);
-
-            },
-
-            mfaRequired: function(codeDeliveryDetails) {
-
-                if (!user.verificationCode) {
-
-                    const mfaRequiredError = new Error('Must Informe a Multi Factor Authentication Code');
-
-                    if (callback) {
-                        authService.currentStatus = AuthService.statusCodes.verificationCodeRequired;
-                        callback(mfaRequiredError, AuthService.statusCodes.verificationCodeRequired);
-                        return;
-                    } else { throw mfaRequiredError; }
-
-                } else {
-
-                    cognitoUser.sendMFACode(user.verificationCode, this);
-
-                }
-
-            }
-
-        });
     }
 
     forgotPassword(username: string, callback: (error: Error, statusCode: string) => void) {
 
         const authService = this;
-        this.signupData.username = username;
-        const cognitoUser = this.getCognitoUser(username);
+        const cognitoUser = this.getCognitoUserByUsername(username);
 
         cognitoUser.forgotPassword({
 
@@ -160,15 +132,15 @@ export class CognitoProvider implements AuthProvider {
         });
     }
 
-    confirmPassword(verficationCode: string, newPassword: string, callback: (error: Error, statusCode: string) => void) {
+    confirmPassword(username: string, verficationCode: string, newPassword: string, callback: (error: Error, statusCode: string) => void) {
 
-        if (!this.signupData.username) {
+        if (!username) {
             callback(new Error('Username is Empty.'), AuthService.statusCodes.incompletedSigninData);
             return;
         }
 
         const authService = this;
-        const cognitoUser = new CognitoUser({ Username: this.signupData.username, Pool: this.userPool});
+        const cognitoUser = new CognitoUser({ Username: username, Pool: this.userPool});
 
         cognitoUser.confirmPassword(verficationCode, newPassword, {
 
@@ -185,6 +157,19 @@ export class CognitoProvider implements AuthProvider {
         });
     }
 
+    confirmRegistration(username: string, confirmationCode: string, callback: AuthProviderCallback): void {
+
+        const cognitoService = this;
+        const cognitoUser = this.getCognitoUserByUsername(username);
+        cognitoUser.confirmRegistration(confirmationCode, true, function (err, result) {
+
+            if (err) { callback(err.message, cognitoService.parseCognitoError(err));
+            } else { callback(null, AuthService.statusCodes.success); }
+
+        });
+
+    }
+
     signout() {
 
         const currentUser = this.userPool.getCurrentUser();
@@ -195,55 +180,112 @@ export class CognitoProvider implements AuthProvider {
 
     }
 
-    getUserAttributes(callback: (err?: Error, data?: Dictionary<any>) => void) {
-
-        this.getCurrentCognitoUser((err1, cognitoUser) => {
-
-            if (!cognitoUser) {
-                callback(new Error('Cognito User is not found'));
-                return;
-            }
-
-            cognitoUser.getUserAttributes((err2?: Error, cognitoAttributes?: CognitoUserAttribute[]) => {
-
-                if (err2) {
-                    callback(err2);
-                    return;
-                }
-
-                cognitoAttributes = cognitoAttributes || [];
-                const cognitoAttributesObject = cognitoAttributes.reduce(function (prev, curr) {
-                    prev[curr.getName()] = curr.getValue();
-                    return prev;
-                }, {});
-
-                callback(undefined, cognitoAttributesObject);
-
-            });
-
-        });
-
-    }
-
-    setUserAttribute(name: string, value: string, callback: (err?: Error) => void) {
+    updateUserInfo(userInfo: AuthUser, callback: (error: Error, statusCode: string) => void): void {
 
         this.getCurrentCognitoUser((err, cognitoUser) => {
 
-            if (!cognitoUser) {
-                callback(new Error('Cognito User is not found'));
-                return;
-            }
+            if (cognitoUser && cognitoUser.getUsername()) {
+                const attributes = this.parseAttributes(userInfo).map(value => ({Name: value.getName(), Value: value.getValue()}));
+                cognitoUser.updateAttributes(attributes, (errUpdate, result) => {
 
-            const cognitoAttributes: ICognitoUserAttributeData[] = [{ Name: name, Value: value }];
-            cognitoUser.updateAttributes(cognitoAttributes, callback);
+                    if (!errUpdate) { callback(null, AuthService.statusCodes.success);
+                    } else { callback(errUpdate, null); }
+
+                });
+
+            } else { callback(err, null); }
 
         });
 
     }
 
-    addAdditionalSignupData(name: string, value: string) {
-        this.signupData.additionalData = this.signupData.additionalData || {};
-        this.signupData.additionalData[name] = value;
+    // getUserAttributes(callback: (err?: Error, data?: Dictionary<any>) => void) {
+
+    //     this.getCurrentCognitoUser((err1, cognitoUser) => {
+
+    //         if (!cognitoUser) {
+    //             callback(new Error('Cognito User is not found'));
+    //             return;
+    //         }
+
+    //         cognitoUser.getUserAttributes((err2?: Error, cognitoAttributes?: CognitoUserAttribute[]) => {
+
+    //             if (err2) {
+    //                 callback(err2);
+    //                 return;
+    //             }
+
+    //             cognitoAttributes = cognitoAttributes || [];
+    //             const cognitoAttributesObject = cognitoAttributes.reduce(function (prev, curr) {
+    //                 prev[curr.getName()] = curr.getValue();
+    //                 return prev;
+    //             }, {});
+
+    //             callback(undefined, cognitoAttributesObject);
+
+    //         });
+
+    //     });
+
+    // }
+
+    // setUserAttribute(name: string, value: string, callback: (err?: Error) => void) {
+
+    //     this.getCurrentCognitoUser((err, cognitoUser) => {
+
+    //         if (!cognitoUser) {
+    //             callback(new Error('Cognito User is not found'));
+    //             return;
+    //         }
+
+    //         const cognitoAttributes: ICognitoUserAttributeData[] = [{ Name: name, Value: value }];
+    //         cognitoUser.updateAttributes(cognitoAttributes, callback);
+
+    //     });
+
+    // }
+
+    // addAdditionalSignupData(name: string, value: string) {
+    //     this.signupData.additionalData = this.signupData.additionalData || {};
+    //     this.signupData.additionalData[name] = value;
+    // }
+
+    private cognitoResultHandler(user: CognitoUser, callback?: (err: Error, statusCode: string) => void): IAuthenticationCallback {
+
+        return {
+
+            onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
+                this.session = session;
+                this.currentStatus = AuthService.statusCodes.signedIn;
+                callback(null, AuthService.statusCodes.signedIn);
+            },
+
+            onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
+
+            newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
+                this.currentStatus = AuthService.statusCodes.newPasswordRequired;
+                callback(null, AuthService.statusCodes.newPasswordRequired);
+            },
+
+            mfaRequired: (challengeName: any, challengeParameters: any) => {
+                this.currentStatus = AuthService.statusCodes.verificationCodeRequired;
+                callback(null, AuthService.statusCodes.verificationCodeRequired);
+            },
+
+            totpRequired: (challengeName: any, challengeParameters: any) => { callback(null, AuthService.statusCodes.notImplemented); },
+            customChallenge: (challengeParameters: any) => { callback(null, AuthService.statusCodes.notImplemented); },
+            mfaSetup: (challengeName: any, challengeParameters: any) => { callback(null, AuthService.statusCodes.notImplemented); },
+            selectMFAType: (challengeName: any, challengeParameters: any) => { callback(null, AuthService.statusCodes.notImplemented); }
+
+        };
+
+    }
+
+    private getCognitoUserByUsername(username?: string) {
+
+        if (!username) { return undefined; }
+        return new CognitoUser({ Username: username, Pool: this.userPool });
+
     }
 
     private getCurrentCognitoUser(callback: (err?: Error, cognitoUser?: CognitoUser) => void) {
@@ -253,28 +295,110 @@ export class CognitoProvider implements AuthProvider {
         if (cognitoUser) {
 
             cognitoUser.getSession((err: Error, session: CognitoUserSession) => {
-                if (session && session.isValid()) {
-                    this.session = session;
-                    callback(undefined, cognitoUser);
-                } else {
-                    callback(undefined, undefined);
-                }
+
+                if (!err) {
+
+                    if (session && session.isValid()) {
+                        this.session = session;
+                        callback(undefined, cognitoUser);
+
+                    } else { callback(undefined, undefined); }
+
+                } else { callback(err, null); }
+
             });
 
         } else { callback(undefined, undefined); }
 
     }
 
-    getCurrentUser(callback: (err?: Error, user?: User) => void) {
+    private parseAuthUser(info: CognitoUser, callback: (Error, AuthUser) => void): void {
 
-        this.getCurrentCognitoUser((err, cognitoUser) => {
+        const customSymbol = 'custom:';
+        const user = {custom: {}};
 
-            if (cognitoUser && cognitoUser.getUsername()) {
-                const identityId = this.cognitoAwsCredentials ? this.cognitoAwsCredentials.identityId : undefined;
-                callback(undefined, new User(true, cognitoUser.getUsername(), identityId));
-            } else { callback(undefined, User.default); }
+        user['username'] = info.getUsername();
+        info.getUserAttributes((err, attributes) => {
+
+            if (!err) {
+
+                attributes.forEach(value => {
+
+                    let keyname = value.getName();
+                    const keyvalue = value.getValue();
+
+                    const isCustom = keyname.indexOf(customSymbol);
+                    if (isCustom > -1) {
+                        keyname = keyname.replace(customSymbol, '');
+                        user.custom[keyname] = keyvalue;
+                    } else { user[keyname] = keyvalue; }
+
+                });
+
+                callback(null, user);
+
+            } else { callback(err, null); }
 
         });
 
     }
+
+    private parseAttributes(info: AuthUser): CognitoUserAttribute[] {
+
+        const attributes: CognitoUserAttribute[] = [];
+        const keys = ['email', 'name', 'nickname', 'given_name', 'middle_name',
+        'family_name', 'birthdate', 'gender', 'locale', 'phone_number', 'address', 'picture', 'preferred_username',
+        'profile', 'timezone', 'updated_at', 'website'];
+
+        for (const keyname of keys) {
+            if (info.hasOwnProperty(keyname)) {
+
+                const attribute = new CognitoUserAttribute({Name: keyname, Value: info[keyname]});
+                if (info[keyname]) { attributes.push(attribute); }
+
+            }
+        }
+
+        const custom = info['custom'];
+        if (custom !== null) {
+            for (const keyname in custom) {
+
+                if (custom.hasOwnProperty(keyname)) {
+
+                    const attribute = new CognitoUserAttribute({Name: 'custom:' + keyname, Value: custom[keyname]});
+                    if (info[keyname]) { attributes.push(attribute); }
+
+                }
+
+            }
+        }
+
+        return attributes;
+
+    }
+
+    private parseCognitoError(err: Error): string {
+
+        switch (err.name) {
+            case 'InvalidPasswordException':
+                return AuthService.statusCodes.invalidPassword;
+            case 'InvalidParameterException':
+                return AuthService.statusCodes.invalidParameter;
+            case 'UserNotFoundException':
+                return AuthService.statusCodes.noSuchUser;
+            case 'NotAuthorizedException':
+                return AuthService.statusCodes.noSuchUser;
+            case 'UserNotConfirmedException':
+                return AuthService.statusCodes.userConfirmationRequired;
+            case 'UsernameExistsException':
+                return AuthService.statusCodes.usernameExists;
+            case 'CodeMismatchException':
+                return AuthService.statusCodes.invalidConfirmationCode;
+            default:
+                console.log(err);
+                return AuthService.statusCodes.unknownError;
+        }
+
+    }
+
 }

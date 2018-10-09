@@ -4,12 +4,7 @@ import { routerTransition } from '../router.animations';
 import { AuthService } from './auth.service';
 import { NgForm } from '@angular/forms';
 
-@Component({
-    selector: 'app-login',
-    templateUrl: './login.component.html',
-    styleUrls: ['./login.component.scss'],
-    animations: [routerTransition()]
-})
+@Component({ selector: 'app-login', templateUrl: './login.component.html', styleUrls: ['./styles/auth.components.scss'], animations: [routerTransition()] })
 export class LoginComponent implements OnInit {
 
     submitted = false;
@@ -26,7 +21,10 @@ export class LoginComponent implements OnInit {
         const username = form.value.username;
         const password = form.value.password;
 
-        this.authService.authenticate({username: username, password: password}, (err, statusCode) => {
+        this.authService.authenticate(username, password, (err, statusCode) => {
+
+            console.log(err);
+            console.log(statusCode);
 
             this.submitted = false;
             if (statusCode === AuthService.statusCodes.newPasswordRequired) {
@@ -34,11 +32,11 @@ export class LoginComponent implements OnInit {
                 return;
 
             } else if (statusCode === AuthService.statusCodes.verificationCodeRequired) {
-                this.router.navigate(['mfaConfirmation']);
+                this.router.navigate(['mfaconfirmation', username]);
                 return;
 
             } else if (statusCode === AuthService.statusCodes.signedIn) {
-                this.router.navigate(['home']);
+                this.router.navigate([this.authService.startRoute]);
                 return;
 
             } else if (statusCode === AuthService.statusCodes.noSuchUser) {
@@ -50,4 +48,5 @@ export class LoginComponent implements OnInit {
         });
 
     }
+
 }
