@@ -9,6 +9,7 @@ export class SignupComponent implements OnInit {
 
     submitted = false;
     submissionError: string;
+    submissionStatus: string;
 
     constructor(public router: Router, private authService: AuthService) {}
 
@@ -52,8 +53,9 @@ export class SignupComponent implements OnInit {
                     this.router.navigate(['mfaconfirmation', username]);
                     return;
 
-                } else if (statusCode === AuthService.statusCodes.signedIn) {
-                    this.router.navigate(['home']);
+                } else if (statusCode === AuthService.statusCodes.signedIn || statusCode === AuthService.statusCodes.success) {
+                    this.submissionStatus = 'Registration Confirmed! You will be redirected to signin page within 3 seconds';
+                    setTimeout(() => {this.router.navigate([this.authService.startRoute]); }, 3000);
                     return;
 
                 } else if (statusCode === AuthService.statusCodes.noSuchUser) {

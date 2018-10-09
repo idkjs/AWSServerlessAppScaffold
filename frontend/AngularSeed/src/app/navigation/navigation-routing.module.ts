@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { NavigationComponent } from './navigation.component';
 import { HomeComponent } from './home/home.component';
+import { ProfileComponent } from '../utils/profile.component';
 
 const routes: Routes = [
     {
@@ -10,6 +11,9 @@ const routes: Routes = [
         children: [
             { path: '', redirectTo: 'home', pathMatch: 'prefix' },
             { path: 'home', component: HomeComponent },
+            { path: 'userprofile', component: ProfileComponent },
+            { path: 'mailbox', component: ProfileComponent },
+            { path: 'taskbox', component: ProfileComponent },
             { path: 'empresa', loadChildren: '../empresa/empresa.module#EmpresaModule' },
             { path: 'pessoa', loadChildren: '../pessoa/pessoa.module#PessoaModule' },
             { path: 'documento', loadChildren: '../documento/documento.module#DocumentoModule' },
@@ -24,8 +28,5 @@ const routes: Routes = [
     }
 ];
 
-@NgModule({
-    imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
-})
+@NgModule({ imports: [RouterModule.forChild(routes)], exports: [RouterModule] })
 export class NavigationRoutingModule {}

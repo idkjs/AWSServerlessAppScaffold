@@ -62,6 +62,37 @@
         }
       }
     },
+    "AppApiDeployment": {
+      "DependsOn": [
+        "MicroserviceEmpresa",
+        "MicroservicePessoa"
+      ],
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TimeoutInMinutes": 60,
+        "TemplateURL": {
+          "Fn::Join": [
+            "",
+            [
+              "https://s3.amazonaws.com/",
+              {
+                "Ref": "BucketName"
+              },
+              "/apideployment.json"
+            ]
+          ]
+        },
+        "Parameters": {
+          "AppRestApiId": {
+            "Fn::GetAtt": [
+              "AppApi",
+              "Outputs.AppRestAPIReference"
+            ]
+          },
+          "StageName": "automated"
+        }
+      }
+    },
     "MicroserviceEmpresa": {
       "Type": "AWS::CloudFormation::Stack",
       "Properties": {

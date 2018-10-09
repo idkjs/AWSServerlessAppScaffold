@@ -15,9 +15,15 @@ type Pessoa {
 	documentos: AWSJSON
 }
 
+type PessoaConnection {
+	items: [Pessoa]
+	nextToken: String
+}
+
 type Query {
 	#     # Get a single value of type 'Post' by primary key.
 	byId(itemId: ID!): Pessoa
+	all(nextToken: String): PessoaConnection
 }
 
 schema {

@@ -4,7 +4,7 @@ export interface AuthProvider {
     register(userInfo: AuthUser, password: string, callback?: (err: Error, statusCode: string) => void): void;
     authenticate(username: string, password: string, callback?: (Error, string) => void): void;
     confirmRegistration(username: string, confirmationCode: string, callback: AuthProviderCallback): void;
-    confirmNewPassword(username: string, newPassword: string, newAttributes: AuthUser, callback?: (err: Error, statusCode: string) => void): void;
+    confirmNewPassword(username: string, newPassword: string, newAttributes: AuthUser, callback?: AuthProviderCallback): void;
     confirmMFA(username: string, confirmationCode: string, callback?: (err: Error, statusCode: string) => void): void;
     forgotPassword(username: string, callback: (error: Error, statusCode: string) => void): void;
     confirmPassword(username: string, verficationCode: string, newPassword: string, callback: (error: Error, statusCode: string) => void): void;

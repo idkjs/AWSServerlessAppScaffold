@@ -28,14 +28,14 @@ export class LoginComponent implements OnInit {
 
             this.submitted = false;
             if (statusCode === AuthService.statusCodes.newPasswordRequired) {
-                this.router.navigate(['newpassword']);
+                this.router.navigate(['newpassword', username]);
                 return;
 
             } else if (statusCode === AuthService.statusCodes.verificationCodeRequired) {
                 this.router.navigate(['mfaconfirmation', username]);
                 return;
 
-            } else if (statusCode === AuthService.statusCodes.signedIn) {
+            } else if (statusCode === AuthService.statusCodes.signedIn || statusCode === AuthService.statusCodes.success ) {
                 this.router.navigate([this.authService.startRoute]);
                 return;
 

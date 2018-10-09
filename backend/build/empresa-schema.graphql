@@ -9,9 +9,14 @@ type Empresa {
 	natureza: AWSJSON
 }
 
+type EmpresaConnection {
+	items: [Empresa]
+	nextToken: String
+}
+
 type Query {
-	#     # Get a single value of type 'Post' by primary key.
 	byId(itemId: ID!): Empresa
+	all(nextToken: String): EmpresaConnection
 }
 
 schema {

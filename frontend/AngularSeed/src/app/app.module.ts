@@ -9,6 +9,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthModule, AuthService, CognitoProvider } from './auth';
+import { UtilsModule } from './utils';
 
 // AoT requires an exported function for factories
 export const createTranslateLoader = (http: HttpClient) => {
@@ -18,10 +19,14 @@ export const createTranslateLoader = (http: HttpClient) => {
 @NgModule({
     imports: [ CommonModule, BrowserModule, BrowserAnimationsModule,
         HttpClientModule, TranslateModule.forRoot({ loader: { provide: TranslateLoader, useFactory: createTranslateLoader, deps: [HttpClient] } }),
-        AuthModule, AppRoutingModule
+        UtilsModule, AuthModule, AppRoutingModule
     ],
     declarations: [AppComponent],
-    providers: [{provide: 'AUTH_PROVIDER',  useValue: new CognitoProvider() }, AuthService],
-    bootstrap: [AppComponent]
+    bootstrap: [AppComponent],
+    providers: [
+        {provide: 'AUTH_PROVIDER',  useValue: new CognitoProvider() },
+        {provide: 'HOME_ROUTE',  useValue: 'home' },
+        AuthService
+    ]
 })
 export class AppModule {}

@@ -1,0 +1,33 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+  
+    "Description": "Root API Deployment for Application",
+  
+    "Parameters": {
+  
+      "AppRestApiId": {
+        "Type": "String",
+        "Description": "The RestAPI Id of the Application"
+        },
+
+        "StageName": {
+            "Type": "String",
+            "Description": "The Name of the Stage"
+        }
+  
+    },
+  
+    "Resources": {
+  
+      "APIDeployment": {
+        "Type" : "AWS::ApiGateway::Deployment",
+        "Properties" : {
+          "Description" : "Automated API Deployment",
+          "RestApiId" : { "Ref": "AppRestApiId" },
+          "StageName" : { "Ref": "StageName" }
+        }
+      }
+  
+    }
+  
+  }

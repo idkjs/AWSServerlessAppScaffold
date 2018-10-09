@@ -227,6 +227,22 @@ function generateMasterStack(resources) {
                     }
                     
                 }
+            },
+
+            AppApiDeployment: {
+                DependsOn : [],
+                Type: "AWS::CloudFormation::Stack",
+                Properties: {
+                    TimeoutInMinutes: 60,
+                    TemplateURL: {
+                        "Fn::Join": ["", ["https://s3.amazonaws.com/", { "Ref": "BucketName" }, "/apideployment.json"]]
+                    },
+                    Parameters: {
+                        AppRestApiId: { "Fn::GetAtt" : [ "AppApi", "Outputs.AppRestAPIReference" ] },
+                        StageName: 'automated'
+                    }
+                    
+                }
             }
 
         },
@@ -252,6 +268,7 @@ function generateMasterStack(resources) {
         resourceName = 'Microservice' + capitalizeFirstLetter(resource.serviceName);
         resourceStack = generateStackResource(resource.serviceName, resource.buildName)
         master.Resources[resourceName] = resourceStack;
+        master.Resources.AppApiDeployment.DependsOn.push(resourceName);
 
     });
 
@@ -268,20 +285,28 @@ function uploadtoS3(localdir, s3bucket, s3region, awsProfile) {
     let files = fs.readdirSync(localdir);
     files.forEach(filename => {
 
-        fs.readFile(path.join(localdir, filename), function (err, data) {
-            if (err) { throw err; }
+        let filePath = path.join(localdir, filename);
+
+        let filecontent = new Buffer.from(fs.readFileSync(filePath), 'binary');
+        s3.upload({Key: filename, Body: filecontent, ACL: 'authenticated-read' }, function (resp) {
+              if (resp) {console.log(resp);} else {console.log(filename + ' uploaded to S3! (' + filecontent.length + ') bytes');}
+        });
+
+        // fs.readFileSync(filePath, function (err, data) {
+
+        //     if (err) { throw err; }
+        //     var base64data = new Buffer.from(data, 'binary');
+        //     if (base64data.length === 0) { throw new Error('File With Zero Size!'); }
+
+        //     s3.upload({
+        //       Key: filename,
+        //       Body: base64data,
+        //       ACL: 'authenticated-read'
+        //     },function (resp) {
+        //         if (resp) {console.log(resp);} else {console.log(filename + ' uploaded to S3! (' + base64data.length + ') bytes');}
+        //     });
           
-            var base64data = new Buffer.from(data, 'binary');
-          
-            s3.upload({
-              Key: filename,
-              Body: base64data,
-              ACL: 'private'
-            },function (resp) {
-                if (resp) {console.log(resp);} else {console.log(filename + ' uploaded to S3!');}
-            });
-          
-          });
+        // });
 
     })
 
@@ -334,7 +359,7 @@ gulp.task('compileAll', gulptasks, function(done) {
     var message3 = 'Stack Generation Done! ' + services.length + ' microservices stacks created!'
     console.time(message3)
 
-    resources = ['apidefinition.json', 'authentication.json']
+    resources = ['apidefinition.json', 'apideployment.json','authentication.json']
     resources.forEach(resourceName => {copyResource('./resources/' + resourceName, tempfolder, resourceName);})
     let builds = findCompiledFiles(tempfolder, services);
     let template = generateMasterStack(builds);
@@ -342,8 +367,7 @@ gulp.task('compileAll', gulptasks, function(done) {
     fs.writeFile(masterfile, JSON.stringify(template, null, 2) , 'utf-8', (err) => {if (err) console.log(err)});
     console.timeEnd(message3);
 
-    uploadtoS3(tempfolder, config.bucketname, config.bucketregion, config.awsprofile);
-
+    setTimeout(() => {uploadtoS3(tempfolder, config.bucketname, config.bucketregion, config.awsprofile);}, 500);
     done();
 
 })

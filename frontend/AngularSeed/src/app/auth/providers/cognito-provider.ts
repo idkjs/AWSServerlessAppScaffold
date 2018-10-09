@@ -26,16 +26,13 @@ export class CognitoProvider implements AuthProvider {
 
     private userPool = new CognitoUserPool(Config.cognito.userPool);
     private currentStatus = 'unknown';
+    private authDetails: AuthenticationDetails;
     private session: CognitoUserSession;
     private cognitoAwsCredentials: CognitoIdentityCredentials;
 
     constructor() { }
 
-    isLogged(): boolean {
-
-        return this.session !== null;
-
-    }
+    isLogged(): boolean { return this.session !== undefined; }
 
     currentUser(callback: (err?: Error, user?: AuthUser) => void) {
 
@@ -77,19 +74,56 @@ export class CognitoProvider implements AuthProvider {
         }
 
         const cognitoUser = this.getCognitoUserByUsername(username);
-        const auth = new AuthenticationDetails({ Username: username, Password: password });
         const handler = this.cognitoResultHandler(cognitoUser, callback);
+        const auth = new AuthenticationDetails({ Username: username, Password: password });
+        this.authDetails = auth;
+
         cognitoUser.authenticateUser(auth, handler);
 
     }
 
-    confirmNewPassword(username: string, newPassword: string,
-         newAttributes: AuthUser, callback?: (err: Error, statusCode: string) => void) {
+    confirmNewPassword(username: string, newPassword: string, newAttributes: AuthUser, callback?: AuthProviderCallback) {
+
+        if (!this.authDetails) {
+            const error: Error = {name: AuthService.statusCodes.authProcessNotInitiated, message: 'AuthProcess Not Initiated!'};
+            callback(error, null);
+            return;
+        }
 
         const cognitoUser = this.getCognitoUserByUsername(username);
-        const newData = {...newAttributes};
-        const handler = this.cognitoResultHandler(cognitoUser, callback);
-        cognitoUser.completeNewPasswordChallenge(newPassword, newData, handler);
+        const newData = newAttributes !== null ? {...newAttributes} : {};
+        cognitoUser.authenticateUser(this.authDetails, {
+
+            onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
+                this.session = session;
+                this.currentStatus = AuthService.statusCodes.success;
+                callback(null, AuthService.statusCodes.success);
+            },
+
+            onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
+
+            newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
+                cognitoUser.completeNewPasswordChallenge(newPassword, newData, {
+
+                    onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
+                        this.session = session;
+                        this.currentStatus = AuthService.statusCodes.success;
+                        callback(null, AuthService.statusCodes.success);
+                    },
+
+                    onFailure: (err: any) => {  callback(err, this.parseCognitoError(err)); },
+
+                    mfaRequired: (challengeName: any, challengeParameters: any) => {
+                        this.currentStatus = AuthService.statusCodes.mfaCodeRequired;
+                        callback(null, AuthService.statusCodes.mfaCodeRequired, {challengeName: challengeName, challengeParameters: challengeParameters});
+                    }
+
+                } );
+            },
+
+            mfaRequired: (challengeName: any, challengeParameters: any) => {}
+
+        });
 
     }
 
@@ -250,7 +284,7 @@ export class CognitoProvider implements AuthProvider {
     //     this.signupData.additionalData[name] = value;
     // }
 
-    private cognitoResultHandler(user: CognitoUser, callback?: (err: Error, statusCode: string) => void): IAuthenticationCallback {
+    private cognitoResultHandler(user: CognitoUser, callback?: AuthProviderCallback): IAuthenticationCallback {
 
         return {
 
@@ -264,12 +298,12 @@ export class CognitoProvider implements AuthProvider {
 
             newPasswordRequired: (userAttributes: any, requiredAttributes: any) => {
                 this.currentStatus = AuthService.statusCodes.newPasswordRequired;
-                callback(null, AuthService.statusCodes.newPasswordRequired);
+                callback(null, AuthService.statusCodes.newPasswordRequired, requiredAttributes);
             },
 
             mfaRequired: (challengeName: any, challengeParameters: any) => {
                 this.currentStatus = AuthService.statusCodes.verificationCodeRequired;
-                callback(null, AuthService.statusCodes.verificationCodeRequired);
+                callback(null, AuthService.statusCodes.mfaCodeRequired, {challengeName: challengeName, challengeParameters: challengeParameters});
             },
 
             totpRequired: (challengeName: any, challengeParameters: any) => { callback(null, AuthService.statusCodes.notImplemented); },
@@ -281,10 +315,13 @@ export class CognitoProvider implements AuthProvider {
 
     }
 
-    private getCognitoUserByUsername(username?: string) {
+    private getCognitoUserByUsername(username?: string): CognitoUser {
 
         if (!username) { return undefined; }
-        return new CognitoUser({ Username: username, Pool: this.userPool });
+        const cognitoUser = this.userPool.getCurrentUser();
+
+        if (cognitoUser && cognitoUser.getUsername() === username) {return cognitoUser;
+        } else {return new CognitoUser({ Username: username, Pool: this.userPool }); }
 
     }
 
@@ -298,11 +335,8 @@ export class CognitoProvider implements AuthProvider {
 
                 if (!err) {
 
-                    if (session && session.isValid()) {
-                        this.session = session;
-                        callback(undefined, cognitoUser);
-
-                    } else { callback(undefined, undefined); }
+                    if (session && session.isValid()) { this.session = session; }
+                    callback(undefined, cognitoUser);
 
                 } else { callback(err, null); }
 

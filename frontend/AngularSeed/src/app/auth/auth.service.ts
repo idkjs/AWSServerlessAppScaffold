@@ -12,6 +12,7 @@ export class AuthService {
     incompletedSigninData: 'incompletedSigninData',
     userConfirmationRequired: 'userConfirmationRequired',
     newPasswordRequired: 'newPasswordRequired',
+    mfaCodeRequired: 'mfaCodeRequired',
     verificationCodeRequired: 'verificationCodeRequired',
     passwordChanged: 'passwordChanged',
     noSuchUser: 'noSuchUser',
@@ -20,10 +21,11 @@ export class AuthService {
     invalidConfirmationCode: 'invalidConfirmationCode',
     usernameExists: 'usernameExists',
     unknownError: 'unknownError',
-    notImplemented: 'notImplemented'
+    notImplemented: 'notImplemented',
+    authProcessNotInitiated: 'authProcessNotInitiated'
   };
 
-  constructor(@Inject('AUTH_PROVIDER') private provider: AuthProvider, private router: Router, public startRoute: string = 'home') { }
+  constructor(@Inject('AUTH_PROVIDER') private provider: AuthProvider, private router: Router, @Inject('HOME_ROUTE') public startRoute: string) { }
 
   currentUser(callback: (err?: Error, user?: AuthUser) => void): void {
     this.provider.currentUser(callback);
@@ -46,7 +48,7 @@ export class AuthService {
   }
 
   confirmNewPassword(username: string, newPassword: string,
-    newAttributes: AuthUser, callback?: (err: Error, statusCode: string) => void) {
+    newAttributes: AuthUser, callback?: AuthProviderCallback) {
     this.provider.confirmNewPassword(username, newPassword, newAttributes, callback);
   }
 

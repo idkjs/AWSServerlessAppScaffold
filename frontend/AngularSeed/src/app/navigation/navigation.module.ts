@@ -8,9 +8,10 @@ import { TopBarComponent } from './top-bar/top-bar.component';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { HomeComponent } from './home/home.component';
 import { NavigationComponent } from './navigation.component';
+import { UtilsModule } from '../utils';
 
 @NgModule({
-  imports: [ CommonModule, NavigationRoutingModule , TranslateModule, NgbDropdownModule.forRoot() ],
+  imports: [ CommonModule, NavigationRoutingModule , UtilsModule, TranslateModule, NgbDropdownModule.forRoot() ],
   declarations: [TopBarComponent, SideBarComponent, HomeComponent, NavigationComponent]
 })
 export class NavigationModule { }
