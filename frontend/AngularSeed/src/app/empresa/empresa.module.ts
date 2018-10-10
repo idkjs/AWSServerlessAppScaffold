@@ -4,9 +4,12 @@ import { PageHeaderModule } from '../shared';
 import { EmpresaRoutingModule } from './empresa-routing.module';
 
 import { EmpresaHomeComponent } from './home/empresa-home.component';
+import { EmpresaComponent } from './empresa/empresa.component';
+import { EmpresaService } from './empresa.service';
 
-@NgModule({
-  imports: [ CommonModule, EmpresaRoutingModule, PageHeaderModule],
-  declarations: [EmpresaHomeComponent]
-})
+const _imports = [ CommonModule, EmpresaRoutingModule, PageHeaderModule ];
+const _declarations = [EmpresaHomeComponent, EmpresaComponent];
+const _providers = [EmpresaService];
+
+@NgModule({ imports: _imports, declarations: _declarations, providers: _providers})
 export class EmpresaModule { }

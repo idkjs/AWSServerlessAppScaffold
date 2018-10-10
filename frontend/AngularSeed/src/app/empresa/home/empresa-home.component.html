@@ -1,4 +1,8 @@
 <div [@routerTransition]>
   <app-page-header [heading]="'Empresas'" [icon]="'fa-bar-chart-o'"></app-page-header>
-  <p>empresa-home works!</p>
+  <div *ngFor='let empresa of empresas | async'>
+    {{empresa.nome}} - {{empresa.alias }} - <a [routerLink]="['/empresa', empresa.itemId]" >Link</a>
+  </div>
+  <!-- <p><a [routerLink]="['empresa', tempProperty.empresaId]">Link</a></p> -->
+  <button (click)="gotTo()">Navegar</button>
 </div>

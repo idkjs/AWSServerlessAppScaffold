@@ -66,4 +66,8 @@ export class TopBarComponent implements OnInit {
         this.navigation.navigateTo(route);
     }
 
+    onSessionInfo() {
+        this.authService.idToken().subscribe(token => { console.log('JwtToken Received!'); });
+    }
+
 }

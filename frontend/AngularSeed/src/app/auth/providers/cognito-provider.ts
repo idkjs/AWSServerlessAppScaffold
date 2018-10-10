@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
 
 import {
     IAuthenticationCallback,
@@ -6,7 +7,10 @@ import {
     AuthenticationDetails,
     CognitoUser,
     CognitoUserAttribute,
-    CognitoUserSession
+    CognitoUserSession,
+    CognitoAccessToken,
+    CognitoIdToken,
+    CognitoRefreshToken
 } from 'amazon-cognito-identity-js';
 import { CognitoIdentityCredentials, config as AWSConfig, AWSError } from 'aws-sdk';
 
@@ -23,7 +27,7 @@ interface ChallengeParameters {
 export class CognitoProvider implements AuthProvider {
 
     // private static userPoolLoginKey = `cognito-idp.${Config.cognito.userPool.region}.amazonaws.com/${Config.cognito.userPool.UserPoolId}`;
-
+    private localSessionKey = 'appTokens';
     private userPool = new CognitoUserPool(Config.cognito.userPool);
     private currentStatus = 'unknown';
     private authDetails: AuthenticationDetails;
@@ -32,19 +36,99 @@ export class CognitoProvider implements AuthProvider {
     private challengeInfoDetails: any;
     private cognitoAwsCredentials: CognitoIdentityCredentials;
 
-    constructor() { }
+    constructor(private debugMode: boolean = false) { }
 
-    isLogged(): boolean { return this.session !== undefined; }
+    isLogged(): boolean {
+
+        if (this.session === undefined) {
+
+            if (this.debugMode) { console.log('CognitoProvider:isLogged(): No User Session Found!'); }
+            // const cached = localStorage.getItem(this.localSessionKey);
+            return false;
+
+            // if (cached) {
+
+            //     if (this.debugMode) { console.log('CognitoProvider:isLogged(): Session Info recovered from LocalStorage!'); }
+            //     const sessionInfo = JSON.parse(cached);
+            //     const AccessToken = new CognitoAccessToken({AccessToken: sessionInfo.AccessToken});
+            //     const IdToken = new CognitoIdToken({IdToken: sessionInfo.IdToken});
+            //     const RefreshToken = new CognitoRefreshToken({RefreshToken: sessionInfo.RefreshToken});
+            //     const session = new CognitoUserSession({ IdToken: IdToken, AccessToken: AccessToken, RefreshToken: RefreshToken});
+
+            //     if (session.isValid()) {
+            //         if (this.debugMode) { console.log('CognitoProvider:isLogged(): Recovered Session is Valid!'); }
+            //         return true;
+            //     } else {
+            //         if (this.debugMode) { console.log('CognitoProvider:isLogged(): Recovered Session is NOT Valid!'); }
+            //         return false;
+            //     }
+
+            // } else {return false; }
+
+        } else {
+            if (this.debugMode) { console.log('CognitoProvider:isLogged(): Active User Session Found!'); }
+            return true;
+        }
+
+    }
 
     currentUser(callback: (err?: Error, user?: AuthUser) => void) {
 
         this.getCurrentCognitoUser((err, cognitoUser) => {
+
+            this.getSession(cognitoUser, (errInt, session) => {
+                if (!errInt && session) { this.session = session; }
+            });
 
             if (cognitoUser && cognitoUser.getUsername()) {
                 this.parseAuthUser(cognitoUser, callback);
             } else { callback(err, null); }
 
         });
+
+    }
+
+    idToken(): Observable<string> {
+
+        const observable = Observable.create((observer) => {
+
+            if (this.cognitoUser) {
+
+                if (this.session === undefined) {
+
+                    if (this.debugMode) { console.log('CognitoProvider:idToken(): Requesting Session!'); }
+                    this.getSession(this.cognitoUser, (err, session) => {
+
+                        if (!err) {
+                            this.session = session;
+                            observer.next(session.getIdToken().getJwtToken());
+                            if (this.debugMode) { console.log('CognitoProvider:idToken(): Returning JwtToken from refresh Session!'); }
+                            if (this.debugMode) { console.log('CognitoProvider:idToken(): Session Expiration->' + this.session.getIdToken().getExpiration()); }
+                        } else {
+                            if (this.debugMode) { console.log('CognitoProvider:idToken(): Error when Requesting Session ->' + err); }
+                            observer.errr(this.parseCognitoError(err));
+                        }
+
+                        observer.complete();
+
+                    });
+
+                } else {
+                    if (this.debugMode) { console.log('CognitoProvider:idToken(): Returning JwtToken from internal property!'); }
+                    if (this.debugMode) { console.log('CognitoProvider:idToken(): Session Expiration->' + this.session.getIdToken().getExpiration()); }
+                    observer.next(this.session.getIdToken().getJwtToken());
+                    observer.complete();
+                }
+
+            } else {
+                if (this.debugMode) { console.log('CognitoProvider:idToken(): user internal property not defined!'); }
+                observer.error(AuthService.statusCodes.authProcessNotInitiated);
+                observer.complete();
+            }
+
+        });
+
+        return observable;
 
     }
 
@@ -81,6 +165,23 @@ export class CognitoProvider implements AuthProvider {
         this.authDetails = auth;
 
         cognitoUser.authenticateUser(auth, handler);
+
+    }
+
+    requestNewConfirmationCode(callback: AuthProviderCallback): void {
+
+        if (!this.cognitoUser) {
+            const error: Error = {name: AuthService.statusCodes.authProcessNotInitiated, message: 'AuthProcess Not Initiated!'};
+            callback(error, null);
+            return;
+        }
+
+        this.cognitoUser.resendConfirmationCode((err, result) => {
+
+            if (!err) { callback(null, AuthService.statusCodes.userConfirmationRequired);
+            } else { callback(err, this.parseCognitoError(err)); }
+
+        });
 
     }
 
@@ -379,6 +480,7 @@ export class CognitoProvider implements AuthProvider {
             onSuccess: (session: CognitoUserSession, userConfirmationNecessary?: boolean) => {
                 this.session = session;
                 this.currentStatus = AuthService.statusCodes.signedIn;
+                this.persistSessionInLocal(session);
                 callback(null, AuthService.statusCodes.signedIn);
             },
 
@@ -404,6 +506,17 @@ export class CognitoProvider implements AuthProvider {
 
     }
 
+    private persistSessionInLocal(session: CognitoUserSession) {
+
+        const sessionData = {
+            IdToken: session.getIdToken(),
+            AccessToken: session.getAccessToken(),
+            RefreshToken: session.getRefreshToken()
+          };
+
+        localStorage.setItem(this.localSessionKey, JSON.stringify(sessionData));
+    }
+
     private getCognitoUserByUsername(username?: string): CognitoUser {
 
         if (!username) { return undefined; }
@@ -416,17 +529,17 @@ export class CognitoProvider implements AuthProvider {
 
     private getCurrentCognitoUser(callback: (err?: Error, cognitoUser?: CognitoUser) => void) {
 
-        const cognitoUser = this.userPool.getCurrentUser();
+        callback(null, this.userPool.getCurrentUser());
 
-        if (cognitoUser) {
+    }
 
-            cognitoUser.getSession((err: Error, session: CognitoUserSession) => {
+    private getSession(user: CognitoUser, callback: (err?: Error, session?: CognitoUserSession) => void) {
 
-                if (!err) {
+        if (user) {
 
-                    if (session && session.isValid()) { this.session = session; }
-                    callback(undefined, cognitoUser);
+            user.getSession((err: Error, session: CognitoUserSession) => {
 
+                if (!err) {callback(undefined, session);
                 } else { callback(err, null); }
 
             });

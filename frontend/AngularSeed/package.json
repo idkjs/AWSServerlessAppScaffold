@@ -4,7 +4,7 @@
     "license": "Apache",
     "scripts": {
         "ng": "ng",
-        "start": "ng serve",
+        "start": "ng serve --proxy-config proxy.config.js",
         "build": "ng build --prod",
         "test": "ng test",
         "test-ci": "TEST_CI=true ng test",

@@ -155,8 +155,8 @@
   },
 
   "Outputs": {
-    "UserPoolId": { "Value": "UserPool" },
-    "UserPoolClientId": { "Value": "UserPoolClient" },
-    "IdentityPoolId": { "Value": "IdentityPool" }
+    "UserPoolId": { "Value": { "Ref": "UserPool"} },
+    "UserPoolClientId": { "Value": { "Ref": "UserPoolClient" }},
+    "IdentityPoolId": { "Value": { "Ref": "IdentityPool" }}
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthProvider, AuthUser, AuthProviderCallback } from './auth.types';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -31,6 +32,8 @@ export class AuthService {
     this.provider.currentUser(callback);
   }
 
+  idToken(): Observable<string> { return this.provider.idToken(); }
+
   register(userInfo: AuthUser, password: string, callback?: (err: Error, statusCode: string) => void) {
     this.provider.register(userInfo, password, callback);
   }
@@ -42,6 +45,9 @@ export class AuthService {
   forgotPassword(username: string, callback: (error: Error, statusCode: string) => void): void {
     this.provider.forgotPassword(username, callback);
   }
+
+  requestNewConfirmationCode(callback: AuthProviderCallback): void {
+    this.provider.requestNewConfirmationCode(callback); }
 
   confirmRegistration(confirmationCode: string, callback: AuthProviderCallback): void {
     this.provider.confirmRegistration(confirmationCode, callback);

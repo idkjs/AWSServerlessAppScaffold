@@ -250,13 +250,8 @@ function generateMasterStack(resources) {
 
         Outputs: {
 
-            AppApi: {
-                Value: { "Fn::GetAtt" : [ "AppApi", "Outputs.AppRestAPIReference" ] },
-                Description: "Application RestAPI definition"
-            },
-    
-            AppApiRootResource: {
-                Value: { "Fn::GetAtt" : [ "AppApi", "Outputs.AppRestAPIRootResource" ] },
+            AppApiUrl: {
+                Value: { "Fn::GetAtt" : [ "AppApiDeployment", "Outputs.APIUrl" ] },
                 Description: "Application RestAPI definition"
             }
     

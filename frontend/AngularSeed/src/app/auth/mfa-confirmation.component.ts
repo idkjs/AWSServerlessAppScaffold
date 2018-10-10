@@ -12,33 +12,39 @@ export class MfaConfirmationComponent implements OnInit {
   submissionStatus: string;
   mfaDetails: string;
 
-  constructor(public router: Router, private authService: AuthService) {}
+  constructor(public router: Router, private authService: AuthService) { }
 
   ngOnInit() { this.mfaDetails = JSON.stringify(this.authService.challengeInfo()); }
 
   onConfirmation(form: NgForm) {
 
-      const confirmationCode = form.value.confirmCode;
+    const confirmationCode = form.value.confirmCode;
 
-      this.submissionError = null;
-      this.submitted = true;
-      this.authService.confirmMFA(confirmationCode, (err, statusCode) => {
+    if (confirmationCode === undefined || confirmationCode === null || confirmationCode === '') {
+      this.submissionError = 'MFA Confirmation Code not Provided!';
+      return;
+    }
 
-        this.submitted = false;
-        if (statusCode === AuthService.statusCodes.signedIn || statusCode === AuthService.statusCodes.success) {
+    this.submissionError = null;
+    this.submitted = true;
+    this.authService.confirmMFA(confirmationCode, (err, statusCode) => {
 
-          this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 3 seconds';
-          setTimeout(() => { this.router.navigate([this.authService.startRoute]); }, 3000);
-          return;
+      this.submitted = false;
+      if (statusCode === AuthService.statusCodes.signedIn || statusCode === AuthService.statusCodes.success) {
 
-        } else if (statusCode === AuthService.statusCodes.incompletedSigninData) {
-          this.router.navigate(['login']);
-          return;
+        this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 3 seconds';
+        setTimeout(() => { this.router.navigate([this.authService.startRoute]); }, 3000);
+        return;
 
-        } else if (statusCode === AuthService.statusCodes.unknownError) {
-          this.submissionError = err.message; }
+      } else if (statusCode === AuthService.statusCodes.incompletedSigninData) {
+        this.router.navigate(['login']);
+        return;
 
-      });
+      } else if (statusCode === AuthService.statusCodes.unknownError) {
+        this.submissionError = err.message;
+      }
+
+    });
 
   }
 

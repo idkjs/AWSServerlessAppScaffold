@@ -344,6 +344,11 @@
     "TableName": {
       "Value": { "Ref": "ServiceTableName" },
       "Description": "DynamoDB Table Name"
+    },
+
+    "GraphQLUrl": {
+      "Value": { "Fn::GetAtt" : [ "GraphQLEndpoint", "GraphQLUrl" ] },
+      "Description": "The Endpoint URL of GraphQL API."
     }
 
   }

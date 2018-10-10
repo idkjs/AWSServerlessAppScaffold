@@ -17,31 +17,47 @@ export class UserConfirmationComponent implements OnInit {
 
   onConfirmation(form: NgForm) {
 
-      const confirmationCode = form.value.confirmCode;
+    const confirmationCode = form.value.confirmCode;
 
-      this.submissionError = null;
-      this.submitted = true;
-      this.authService.confirmRegistration(confirmationCode, (err, statusCode) => {
+    if (confirmationCode === undefined || confirmationCode === null || confirmationCode === '') {
+      this.submissionError = 'Confirmation Code not Provided!';
+      return;
+    }
 
-        this.submitted = false;
-        if (statusCode === AuthService.statusCodes.success) {
+    this.submissionError = null;
+    this.submitted = true;
+    this.authService.confirmRegistration(confirmationCode, (err, statusCode) => {
 
-          this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 3 seconds';
-          setTimeout(() => {this.router.navigate([this.authService.startRoute]); }, 3000);
-          return;
+      this.submitted = false;
+      if (statusCode === AuthService.statusCodes.success) {
 
-        } else if (statusCode === AuthService.statusCodes.incompletedSigninData) {
-          this.router.navigate(['login']);
-          return;
+        this.submissionStatus = 'Confirmation Code Verified. You will be redirected to home page within 3 seconds';
+        setTimeout(() => {this.router.navigate([this.authService.startRoute]); }, 3000);
+        return;
 
-        } else if (statusCode === AuthService.statusCodes.unknownError) {
-          this.submissionError = JSON.stringify(err);
-        } else {
-          console.log(statusCode);
-          console.log(err);
-        }
+      } else if (statusCode === AuthService.statusCodes.incompletedSigninData) {
+        this.router.navigate(['login']);
+        return;
 
-      });
+      } else if (statusCode === AuthService.statusCodes.unknownError) {
+        this.submissionError = JSON.stringify(err);
+      }
+
+    });
+
+  }
+
+  onRequestNewCode() {
+
+    this.submissionError = null;
+    this.submitted = true;
+    this.authService.requestNewConfirmationCode((err, statusCode) => {
+
+      this.submitted = false;
+      if (statusCode === AuthService.statusCodes.success) { this.submissionStatus = 'Confirmation Code Requested!';
+      } else if (statusCode === AuthService.statusCodes.unknownError) { this.submissionError = JSON.stringify(err); }
+
+    });
 
   }
 

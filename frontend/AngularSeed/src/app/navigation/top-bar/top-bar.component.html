@@ -121,7 +121,7 @@
                   <a class="dropdown-item" [routerLink]="['/userprofile']">
                       <i class="fa fa-fw fa-envelope"></i> {{ 'Inbox' | translate }}
                   </a>
-                  <a class="dropdown-item" href="javascript:void(0)">
+                  <a class="dropdown-item" (click)="onSessionInfo()">
                       <i class="fa fa-fw fa-gear"></i> {{ 'Settings' | translate }}
                   </a>
                   <a class="dropdown-item" (click)="onLoggedout()">

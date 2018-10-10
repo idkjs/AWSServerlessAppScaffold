@@ -1,8 +1,12 @@
+import { Observable } from 'rxjs';
+
 export interface AuthProvider {
     currentUser(callback: (err?: Error, user?: AuthUser) => void): void;
+    idToken(): Observable<string>;
     updateUserInfo(userInfo: AuthUser, callback: (error: Error, statusCode: string) => void): void;
     register(userInfo: AuthUser, password: string, callback?: (err: Error, statusCode: string) => void): void;
     authenticate(username: string, password: string, callback?: (Error, string) => void): void;
+    requestNewConfirmationCode(callback: AuthProviderCallback): void;
     confirmRegistration(confirmationCode: string, callback: AuthProviderCallback): void;
     confirmNewPassword(uewPassword: string, newAttributes: AuthUser, callback?: AuthProviderCallback): void;
     confirmMFA(confirmationCode: string, callback?: AuthProviderCallback): void;
