@@ -20,7 +20,7 @@ export class EmpresaService {
   };
 
   private graphqlurl = {
-    hostname: 'https://qf4s2hdz2fglrk3e6rnquaiqhu.appsync-api.us-east-1.amazonaws.com',
+    hostname: 'https://xzdn7qdqnnfebnda5fgborgeqe.appsync-api.us-east-1.amazonaws.com',
     resource: 'graphql'
   };
 

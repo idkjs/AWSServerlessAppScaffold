@@ -191,20 +191,11 @@
     }
   },
   "Outputs": {
-    "AppApi": {
+    "AppApiUrl": {
       "Value": {
         "Fn::GetAtt": [
-          "AppApi",
-          "Outputs.AppRestAPIReference"
-        ]
-      },
-      "Description": "Application RestAPI definition"
-    },
-    "AppApiRootResource": {
-      "Value": {
-        "Fn::GetAtt": [
-          "AppApi",
-          "Outputs.AppRestAPIRootResource"
+          "AppApiDeployment",
+          "Outputs.APIUrl"
         ]
       },
       "Description": "Application RestAPI definition"
