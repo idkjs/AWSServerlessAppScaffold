@@ -37,8 +37,6 @@ def getSession(awsProfile):
 
 def uploadItems(session, tablename, objects):
 
-    print(tablename)
-
     if verbose:
         lenght = len(objects)
         print("Uploading " + str(lenght) + "...")

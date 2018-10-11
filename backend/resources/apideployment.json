@@ -33,7 +33,7 @@
     "Outputs": {
   
       "APIUrl": {
-        "Value": { "Fn::Join" : [ "", [ "https://", { "Ref" : "AppRestApiId" }, "", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "StageName" }, "/" ] ] },
+        "Value": { "Fn::Join" : [ "", [ "https://", { "Ref" : "AppRestApiId" }, ".execute-api.", { "Ref" : "AWS::Region" }, ".amazonaws.com/", { "Ref" : "StageName" }, "/" ] ] },
         "Description": "The Endpoint URL of API."
       }
   

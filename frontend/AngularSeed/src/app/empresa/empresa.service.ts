@@ -46,13 +46,9 @@ export class EmpresaService {
 
       this.authService.idToken().toPromise().then(token => {
 
-        console.log(token);
-
         const headers = new HttpHeaders({'Authorization': token, 'Content-Type': 'application/json; charset=utf-8'});
         const options = { headers: headers };
         const query = { query: 'query listEmpresas { all(nextToken: null) { items { itemId nome alias natureza } } }'};
-
-        console.log(options);
         const parsed = this.http.post<GraphqlResponse>(url, query, options)
         .pipe(map(response => response.data.all.items));
         parsed.subscribe(values => { observer.next(values); });

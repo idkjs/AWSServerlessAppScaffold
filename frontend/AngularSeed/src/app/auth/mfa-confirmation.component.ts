@@ -40,6 +40,9 @@ export class MfaConfirmationComponent implements OnInit {
         this.router.navigate(['login']);
         return;
 
+      } else if (statusCode === AuthService.statusCodes.invalidConfirmationCode) {
+        this.submissionError = 'Invalid Confirmation Code!';
+
       } else if (statusCode === AuthService.statusCodes.unknownError) {
         this.submissionError = err.message;
       }
