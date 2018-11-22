@@ -12,7 +12,6 @@ Parameters:
 Resources:
   SNSRole:
     Type: AWS::IAM::Role
-    Description: "An IAM Role to allow Cognito to send SNS messages"
     Properties:
       RoleName: !Sub ${APIName}-cognito-sns-role
       ManagedPolicyArns:
