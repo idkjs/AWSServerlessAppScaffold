@@ -1,38 +1,37 @@
 # AWSServerlessAppScaffold
 
-Este projeto tem por objetivo desenvolver uma solução completa usando o paradigma Serverless contemplando:
+This project aims to develop a complete solution using the Serverless paradigm contemplating:
 
 ### Backend
-- Base de Dados (DynamoDB/Aurora Serverless/Athena);
-- Funções (AWS Lambda);
-- Filas de Processamento (AWS SQS);
-- Serviços de Notificação (AWS SNS);
-- Autenticação de Usuários e OpenID (AWS Cognito User Pools and Federation Pools);
-- Interface de API's (API Gateway);
-- Endpoint de Consulta de Dados usando GraphQL (AWS Appsync);
-- Endpoint de Consulta Full Attributes (AWS CloudSearch/AWS ElasticSearch);
-- Processamento em Batch (AWS ECS);
-- Concentação de Logs (Amazon Cloudwatch);
-- Gestão de Desempenho de Aplicações (AWS X-Ray);
-- Content Delivery Network usando SSL (Amazon Cloudfront).
+Database (DynamoDB / Aurora Serverless / Athena);
+Functions (AWS Lambda);
+Processing Queues (AWS SQS);
+Notification Services (AWS SNS);
+User Authentication and OpenID (AWS Cognito User Pools and Federation Pools);
+API's Interface (API Gateway);
+Data Query Endpoint using GraphQL (AWS Appsync);
+Full Attributes Query Endpoint (AWS CloudSearch / AWS ElasticSearch);
+Batch Processing (AWS ECS);
+Logs Concentration (Amazon Cloudwatch);
+Performance Management of Applications (AWS X-Ray);
+Content Delivery Network using SSL (Amazon Cloudfront).
+Frontend
+For access to the Backend services listed above, the following frontend components have been devised:
 
-### Frontend
-Para acesso aos serviços de Backend relacionados acima, foram planejados os seguintes componentes de frontend:
-- Frontend SPA (Angular on AWS S3);
-- iOS 12 App with AWS-SDK;
-- Android O App with AWS-SDK.
+### Frontend SPA (Angular on AWS S3);
+iOS 12 App with AWS-SDK;
+Android The App with AWS-SDK.
+Architectural Patterns
+For the construction of this project, the following architectural standards were considered:
 
-## Padrões Arquiteturais
-Para construção deste projeto foram considerados os seguintes padrões arquiteturais:
+### Microservices:
+The System will be composed of an independent set of services, each with its own autonomous life cycle. Each microservice must include all the necessary components to persistently store your data, define public endpoints and forward messages.
 
-### Microserviços:
-O Sistema será composto por um conjunto independente de serviços, cada um com um ciclo de vida próprio e autônomo. Cada microserviço deverá contemplar todos os componentes necessários para armazenar de forma persistente os seus dados, definir os endpoints públicos e encaminhar mensagens.
+### Event Source - Pub / Sub
+Each microservice will expose subscription topics for events that are part of your business life cycle. The topics open to subscription must obey the fan-out paradigm, and can be processed by more than one subscribed service.
 
-### Event Source - Pub/Sub
-Cada microserviço irá expor tópicos para subscrição com relação aos eventos que fazem parte do seu ciclo de vida de negócio. Os tópicos abertos a subscrição devem obedecer o paradigma fan-out, podendo ser processados por mais de um serviço subscrito.
+### Technological Motivation
+This project was designed to serve as a playground to test the practices and architectures proposed for the Serverless paradigm, indicating its strengths, weaknesses, and pitfalls.
 
-## Motivação Tecnológica
-Este projeto foi planejado com o objetivo de servir como playground para testar as práticas e arquiteturas propostas para o paradigma Serverless, indicando seus pontos fortes, pontos fracos e armadilhas.
-
-## Motivação de Negócio
-Este projeto pode ser utilizado como raiz para criação de novos projetos baseados em pessoas físicas e jurídicas. Esta raiz contempla o cadastramento de empresas e pessoas e relacionamentos genéricos entre estes. Contempla também um pipeline para processos genéricos e repositórios de documentos e mídias (vídeos, sons e fotos).
+### Business Motivation
+This project can be used as root for creation of new projects based on individuals and legal entities. This root includes the registration of companies and people and generic relationships between them. It also includes a pipeline for generic processes and repositories of documents and media (videos, sounds and photos).
